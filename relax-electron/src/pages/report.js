@@ -34,7 +34,8 @@ function buildReportData(){
   const tr=rentals.filter(r=>r.startTs>=ds);
   const tot=tr.length;
   const totalRev=tr.reduce((s,r)=>s+r.totalPrice,0);
-  const totalSur=tr.reduce((s,r)=>s+(r.finalSurcharge||0),0);
+  const now2=Date.now();
+  const totalSur=tr.reduce((s,r)=>s+calcSurcharge(r,now2),0);
   const avgDurMins=tr.length?Math.round(tr.reduce((s,r)=>s+r.duration,0)/tr.length):0;
   const fmtD=m=>{if(m>=1440)return 'Cały dzień';if(m>=60)return Math.floor(m/60)+'h '+(m%60?m%60+'min':'');return m+' min';};
   const hourCounts=Array(24).fill(0);
@@ -149,7 +150,8 @@ function exportReportXLSX(){
 function renderReport(){
   const today=new Date();const ds=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
   const tr=rentals.filter(r=>r.startTs>=ds);
-  const tot=tr.length,base=tr.reduce((s,r)=>s+r.totalPrice,0),sur=tr.reduce((s,r)=>s+(r.finalSurcharge||0),0);
+  const now=Date.now();
+  const tot=tr.length,base=tr.reduce((s,r)=>s+r.totalPrice,0),sur=tr.reduce((s,r)=>s+calcSurcharge(r,now),0);
   let reportCategories;
   try{const raw=localStorage.getItem('rl2_report_categories');reportCategories=raw?JSON.parse(raw):null;}catch(e){reportCategories=null;}
   const allTypes=[{type:'gokart',label:'Gokarty'},{type:'rower',label:'Rowery'},...getCustomTypes().filter(x=>x!=='gokart'&&x!=='rower').map(tp=>({type:tp,label:tp.charAt(0).toUpperCase()+tp.slice(1)}))];

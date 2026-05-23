@@ -126,7 +126,7 @@ function renderSettings(){
 
     <div class="sett-card">
       <details>
-        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid var(--bd)">
           ${t('settBackup')||'Kopia zapasowa danych'}
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
@@ -232,7 +232,7 @@ function renderSettingsUser(){
     <div style="max-width:460px">
     <div class="sett-card">
       <details>
-        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid var(--bd)">
           ${t('settBackup')||'Kopia zapasowa danych'}
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
@@ -688,7 +688,6 @@ function renderSettingsPrices(){
           return `<div style="margin-bottom:10px">
             <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
             <div style="background:var(--s2);border-radius:3px;overflow:hidden">
-              ${hdr('1fr 68px')}<div></div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplataHdr}</div></div>
               ${surs.map((s,si)=>row('1fr 68px',`<div style="font-size:11px;color:#fff;padding-left:2px">Po ${s.graceMin||0} min</div>${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
             </div>
           </div>`;
@@ -847,6 +846,8 @@ async function exportAllData(){
     a.href=URL.createObjectURL(blob);
     a.download=`relax_backup_${ds}.zip`;
     document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);if(a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);},500);
+    if(typeof window.electronAPI!=='undefined'&&window.electronAPI.saveZipBackup)
+      window.electronAPI.saveZipBackup(`backup_${ds}.zip`,zipData).catch(()=>{});
     if(msg){msg.textContent=t('settExportOk')||'✓ Eksport gotowy';msg.style.color='var(--green)';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
   }catch(e){if(msg){msg.textContent='Błąd eksportu: '+e.message;msg.style.color='var(--red)';}}
 }

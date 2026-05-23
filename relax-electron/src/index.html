@@ -813,8 +813,11 @@ async function init(){
   }catch(e){}
   renderLogin();
   renderCennikPanel();
-  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.focus)
-    setTimeout(()=>{window.electronAPI.focus();const inp=document.getElementById('login-pw-input');if(inp)inp.focus();},300);
+  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.focusWindow)
+    setTimeout(()=>{
+      window.electronAPI.focusWindow();
+      setTimeout(()=>{const inp=document.getElementById('login-pw-input');if(inp)inp.focus();},300);
+    },500);
 }
 
 // ═══ BACKUP ENCRYPTION (AES-256-GCM via SubtleCrypto) ═══

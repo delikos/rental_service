@@ -7,6 +7,7 @@ const userDataPath = app.getPath('userData');
 const dbPath       = path.join(userDataPath, 'relax.db');
 const backupDir    = path.join(userDataPath, 'backups');
 let db, SQL;
+let mainWindow;
 
 // ── Init DB ──────────────────────────────────────────────────────
 async function initDB() {
@@ -152,9 +153,22 @@ ipcMain.handle('win:focus', (event) => {
   if (win && !win.isDestroyed()) { win.show(); win.focus(); }
 });
 
-ipcMain.on('focus-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.focus(); }
+ipcMain.handle('db:saveZipBackup', (_, filename, buf) => {
+  try {
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.writeFileSync(path.join(backupDir, filename), Buffer.from(buf));
+    return true;
+  } catch(e) { console.error('ZIP backup save error:', e); return false; }
+});
+
+ipcMain.on('focus-window', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.show();
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.setAlwaysOnTop(true);
+  mainWindow.focus();
+  mainWindow.setAlwaysOnTop(false);
+  mainWindow.webContents.focus();
 });
 
 ipcMain.handle('auth:hashPw', (_, pw) => {
@@ -192,6 +206,7 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
+  mainWindow = win;
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
   // Restore OS focus after every page load (fixes freeze after window.location.reload())
   win.webContents.on('did-finish-load', () => {
