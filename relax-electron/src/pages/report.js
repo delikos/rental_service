@@ -63,55 +63,64 @@ async function exportReportPDF(){
   if(!fields)fields=['pdf_rentals','pdf_per_equip','pdf_revenue','pdf_surcharge','pdf_top_model','pdf_avg_dur','pdf_peak_hour'];
   if(!fields.length)return;
   const today=new Date();
-  const dateStr=`${today.getDate().toString().padStart(2,'0')}.${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getFullYear()}`;
-  const pdfDate=`${today.getDate().toString().padStart(2,'0')}_${(today.getMonth()+1).toString().padStart(2,'0')}_${today.getFullYear()}`;
+  const p2=n=>String(n).padStart(2,'0');
+  const dateStr=`${p2(today.getDate())}.${p2(today.getMonth()+1)}.${today.getFullYear()}`;
+  const pdfDate=`${p2(today.getDate())}_${p2(today.getMonth()+1)}_${today.getFullYear()}`;
   const rows=buildReportData();
-  const addRow=(label,value)=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;color:#333">${label}</td><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;font-weight:700;color:#111;text-align:right">${value}</td></tr>`;
-  const tableRows=rows.map(r=>addRow(r[0],r[1])).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Raport dzienny — ${dateStr}</title>
-  <style>body{font-family:Arial,sans-serif;margin:32px;color:#111;}@media print{body{margin:0;}@page{margin:18mm;}}
-  .date-bar{background:#222;color:#fff;padding:10px 18px;font-size:13px;font-weight:700;margin-bottom:0;display:flex;align-items:center;gap:30px;border-radius:3px 3px 0 0;}
-  .date-bar .lbl{color:#aaa;font-size:11px;margin-right:6px;}
-  table{width:100%;border-collapse:collapse;}
-  th{background:#222;color:#fff;padding:7px 10px;font-size:11px;text-align:left;}th:last-child{text-align:right;}
-  tr:nth-child(even) td{background:#f9f9f9;}
-  .footer{margin-top:20px;font-size:13px;color:#666;text-align:right;}
-  </style></head><body>
-  <div style="font-size:28px;font-weight:900;margin-bottom:18px"><span style="color:#e05000">Re</span>lax</div>
-  <div style="border:1.5px solid #222;border-radius:3px;overflow:hidden;margin-top:8px">
-  <div class="date-bar"><span><span class="lbl">Data:</span>${dateStr}</span><span><span class="lbl">Wygenerowano:</span>${today.getHours().toString().padStart(2,'0')}:${today.getMinutes().toString().padStart(2,'0')}</span></div>
-  <table><thead><tr><th>POZYCJA</th><th style="text-align:right">WARTOŚĆ</th></tr></thead><tbody>${tableRows}</tbody></table></div>
-  <div class="footer">Relax Wypożyczalnia • Raport dzienny • ${dateStr}</div>
-  </body></html>`;
-  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.savePDF){
-    const btn=document.getElementById('pdf-export-btn');
-    const origText=btn?btn.innerHTML:'';
-    const origBg=btn?btn.style.background:'';
-    if(btn){btn.innerHTML='⏳ PDF';btn.style.opacity='.6';btn.style.pointerEvents='none';}
+  const tableRows=rows.map(r=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;color:#333">${r[0]}</td><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;font-weight:700;color:#111;text-align:right">${r[1]}</td></tr>`).join('');
+  const reportContent=`
+    <div style="font-family:Arial,sans-serif;color:#111;padding:32px">
+      <div style="font-size:28px;font-weight:900;margin-bottom:18px"><span style="color:#e05000">Re</span>lax</div>
+      <div style="border:1.5px solid #222;border-radius:3px;overflow:hidden;margin-top:8px">
+        <div style="background:#222;color:#fff;padding:10px 18px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:30px">
+          <span><span style="color:#aaa;font-size:11px;margin-right:6px">Data:</span>${dateStr}</span>
+          <span><span style="color:#aaa;font-size:11px;margin-right:6px">Wygenerowano:</span>${p2(today.getHours())}:${p2(today.getMinutes())}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr><th style="background:#222;color:#fff;padding:7px 10px;font-size:11px;text-align:left">POZYCJA</th><th style="background:#222;color:#fff;padding:7px 10px;font-size:11px;text-align:right">WARTOŚĆ</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px;font-size:13px;color:#666;text-align:right">Relax Wypożyczalnia • Raport dzienny • ${dateStr}</div>
+    </div>`;
+
+  const btn=document.getElementById('pdf-export-btn');
+  const origText=btn?btn.innerHTML:'';
+  const origBg=btn?btn.style.background:'';
+  if(btn){btn.innerHTML='⏳ PDF';btn.style.opacity='.6';btn.style.pointerEvents='none';}
+
+  // Populate print frame and trigger PDF via Electron (main window printToPDF)
+  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.generatePDF){
+    let frame=document.getElementById('rl-print-frame');
+    if(!frame){frame=document.createElement('div');frame.id='rl-print-frame';document.body.appendChild(frame);}
+    frame.innerHTML=reportContent;
     try{
-      const ok=await window.electronAPI.savePDF(html,`relax_raport_${pdfDate}.pdf`);
-      if(ok){
+      const ok=await window.electronAPI.generatePDF(`relax_raport_${pdfDate}.pdf`);
+      if(ok===true){
         if(btn){btn.innerHTML='✓ PDF';btn.style.background='var(--green)';}
         setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background=origBg||'var(--acc)';}},2000);
       }
-      // ok===false means user cancelled — just restore button below via finally
     }catch(err){
       if(btn){btn.innerHTML='✕ Błąd';btn.style.background='var(--red)';}
       setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background=origBg||'var(--acc)';}},3000);
       console.error('PDF error:',err);
     }finally{
+      frame.innerHTML='';
       if(btn){btn.style.opacity='1';btn.style.pointerEvents='';}
     }
   } else {
+    // Browser fallback: print iframe
+    const fullHtml=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;}@page{margin:18mm;}</style></head><body>${reportContent}</body></html>`;
     const iframe=document.createElement('iframe');
     iframe.style.cssText='position:fixed;width:0;height:0;border:0;left:-9999px;top:-9999px';
     document.body.appendChild(iframe);
     const doc=iframe.contentDocument||iframe.contentWindow.document;
-    doc.open();doc.write(html);doc.close();
+    doc.open();doc.write(fullHtml);doc.close();
     setTimeout(()=>{
       try{iframe.contentWindow.focus();iframe.contentWindow.print();}catch(e){}
       setTimeout(()=>{try{document.body.removeChild(iframe);}catch(e){}},2000);
     },500);
+    if(btn){btn.style.opacity='1';btn.style.pointerEvents='';}
   }
 }
 

@@ -41,7 +41,7 @@ function renderSettings(){
                 <button id="lang-btn-${u.id}-en" onclick="setUserLang('${u.id}','en')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='en'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="English">🇬🇧</button>
                 <button id="lang-btn-${u.id}-uk" onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
               </div>
-              <button onclick="showUserSessions('${u.id}')" style="height:30px;padding:0 8px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">${t('settSessions')||'Historia logowań'}</button>
+              <button onclick="showUserSessions('${u.id}')" style="height:30px;padding:0 8px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">${t('settSessionsBtn')||'Historia logowań'}</button>
             </div>
             <div id="user-sessions-${u.id}" style="display:none;background:var(--s3);border-radius:var(--rsm);padding:8px;margin-bottom:10px;max-height:200px;overflow-y:auto"></div>
             <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">${t('settPerms')||'Uprawnienia'}</div>
@@ -106,7 +106,7 @@ function renderSettings(){
             let cats;try{const raw=localStorage.getItem('rl2_report_categories');cats=raw?JSON.parse(raw):null;}catch(e){cats=null;}
             const allTypes=[{type:'gokart',label:t('settKarts')||'Gokarty'},{type:'rower',label:t('settBikes')||'Rowery'},...getCustomTypes().filter(x=>x!=='gokart'&&x!=='rower').map(tp=>({type:tp,label:tp.charAt(0).toUpperCase()+tp.slice(1)}))];
             if(!cats)cats=[...allTypes];
-            return allTypes.map(at=>{const checked=cats.some(c=>c.type===at.type);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:8px"><input type="checkbox" ${checked?'checked':''} onchange="toggleReportCat('${at.type}','${at.label}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${at.label}</span></label>`;}).join('')+`<div style="font-size:10px;color:var(--t3);margin-top:4px">${t('settRepAutoSave')||'Zmiany są zapisywane automatycznie.'}</div>`;
+            return allTypes.map(at=>{const checked=cats.some(c=>c.type===at.type);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:8px"><input type="checkbox" ${checked?'checked':''} onchange="toggleReportCat('${at.type}','${at.label}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${at.label}</span></label>`;}).join('')+`<div style="font-size:12px;color:var(--t2);margin-top:6px">${t('settRepAutoSave')||'Zmiany są zapisywane automatycznie.'}</div>`;
           })()}
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
             <div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">${t('settRepFieldsLbl')||'Dane w raporcie PDF:'}</div>
@@ -132,6 +132,14 @@ function renderSettings(){
         </summary>
         <div style="margin-top:12px">
           <div style="font-size:11px;color:var(--t2);margin-bottom:12px">${t('settBackupDesc')||'Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.'}</div>
+          <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)">
+            <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">${t('settExportPwLbl')||'Hasło do eksportu danych'}</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="password" id="export-pw-input" value="${localStorage.getItem('rl2_export_pw')||''}" placeholder="••••••••" style="flex:1;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:6px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
+              <button onclick="saveExportPw()" style="height:30px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap">${t('settExportPwSave')||'Zapisz'}</button>
+            </div>
+            <div id="export-pw-msg" style="font-size:10px;color:var(--t3);margin-top:4px">${t('settExportPwHint')||'Gdy hasło jest ustawione, eksport będzie zaszyfrowany (.rlx).'}</div>
+          </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -146,6 +154,19 @@ function renderSettings(){
         </div>
       </details>
     </div>`
+}
+function saveExportPw(){
+  const inp=document.getElementById('export-pw-input');
+  const msg=document.getElementById('export-pw-msg');
+  if(!inp)return;
+  const pw=inp.value;
+  if(pw.length>0){localStorage.setItem('rl2_export_pw',pw);}
+  else{localStorage.removeItem('rl2_export_pw');}
+  if(msg){
+    msg.textContent=pw.length>0?(t('settExportPwSet')||'Hasło eksportu ustawione.'):(t('settExportPwClear')||'Hasło eksportu wyczyszczone.');
+    msg.style.color='var(--green)';
+    setTimeout(()=>{if(msg){msg.textContent=t('settExportPwHint')||'Gdy hasło jest ustawione, eksport będzie zaszyfrowany (.rlx).';msg.style.color='var(--t3)';}},2000);
+  }
 }
 function toggleUserCard(uid){
   const el=document.getElementById('ucard-'+uid);
@@ -379,7 +400,7 @@ function renderSettingsEquipment(){
             <button type="button" onclick="addEqSurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">${t('settEquipAddSurTier')||'+ Dodaj próg dopłaty'}</button>
           </div>
         </div>
-        <div style="font-size:10px;color:var(--t3);margin-top:5px">${t('settEquipPriceHint')||'Zostaw puste jeśli nie chcesz teraz.'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:5px">${t('settEquipPriceHint')||'Zostaw puste jeśli nie chcesz teraz.'}</div>
       </div>
       <div id="eq-error" style="color:var(--red);font-size:11px;min-height:16px;margin-bottom:6px"></div>
       <button class="btn btn-p" onclick="addFleetVehicle()" style="width:auto;padding:0 16px;height:30px;font-size:11px">${t('settEquipAddVehicle')||'Dodaj pojazd'}</button>
@@ -536,6 +557,12 @@ function addFleetVehicle(){
   const isNewModel=!sameTypeExistingModels.includes(finalCapModel.toLowerCase());
   const priceSection=document.getElementById('eq-price-section');
   const hasPriceInput=priceSection&&priceSection.style.display!=='none';
+  // Validate duplicate durations before saving
+  if(hasPriceInput){
+    const allDurSels=[document.getElementById('eq-dur30-sel'),...document.querySelectorAll('#eq-extra-durs .eq-dur-mins')].filter(Boolean);
+    const durVals=allDurSels.map(s=>s.value);
+    if(durVals.length!==new Set(durVals).size){if(errEl)errEl.textContent='Nie można dodać dwóch takich samych okresów.';return;}
+  }
   const hasSurcharge=document.querySelectorAll('.eq-sur-row').length>0&&Array.from(document.querySelectorAll('.eq-sur-price')).some(el=>parseInt(el.value)>0);
   if(isNewModel||hasPriceInput||hasSurcharge){
     const p30=parseInt(document.getElementById('eq-price30')?.value)||0;
@@ -621,7 +648,8 @@ function renderSettingsPrices(){
 
   let cp={};try{cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');}catch(e){}
   const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
-  const durLabels={30:'30 min',60:'1 godz.',90:'90 min',120:'2 godz.',180:'3 godz.',240:'4 godz.',360:'6 godz.',720:'12 godz.',1440:'Cały dzień'};
+  const _h=t('durHour')||'godz.';const _d=t('allDay')||'Cały dzień';
+  const durLabels={30:'30 min',60:`1 ${_h}`,90:'90 min',120:`2 ${_h}`,180:`3 ${_h}`,240:`4 ${_h}`,360:`6 ${_h}`,720:`12 ${_h}`,1440:_d};
   const backBtn=`<button onclick="showV('settings')" style="height:32px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>${t('settPricesBack')||'Powrót'}</button>`;
 
   // ── Custom type price cards (same design as Gokarty/Rowery) ──
@@ -658,8 +686,8 @@ function renderSettingsPrices(){
           return `<div style="margin-bottom:10px">
             <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
             <div style="background:var(--s2);border-radius:3px;overflow:hidden">
-              ${hdr('1fr 68px 68px')}<div></div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surGraceHdr}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplataHdr}</div></div>
-              ${surs.map((s,si)=>row('1fr 68px 68px',`<div style="font-size:10px;color:var(--t3)">${si===0?t('settSurGrace')||'Czas':'+'}</div>${cell('ctsur-'+type+'-'+ei+'-grace-'+si,s.graceMin||0,'min')}${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
+              ${hdr('1fr 68px')}<div></div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplataHdr}</div></div>
+              ${surs.map((s,si)=>row('1fr 68px',`<div style="font-size:11px;color:var(--t2);padding-left:2px">Po ${s.graceMin||0} min</div>${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
             </div>
           </div>`;
         }).join('')}
@@ -675,7 +703,7 @@ function renderSettingsPrices(){
     <div class="sett-card">
       <h3>${t('settKarts')||'Gokarty'}</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        ${hdr('1fr 76px 76px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">30 min</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1 godz.</div></div>
+        ${hdr('1fr 76px 76px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">30 min</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1 ${t('durHour')||'godz.'}</div></div>
         ${KARTS.map((k,i)=>row('1fr 76px 76px',`${lbl(k.name.toUpperCase())}${cell('kp-'+i+'-30',k.p[30],'zł')}${cell('kp-'+i+'-60',k.p[60],'zł')}`)).join('')}
       </div>
       <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveKartPrices()">${t('settSaveKarts')||'Zapisz gokarty'}</button>
@@ -705,7 +733,7 @@ function renderSettingsPrices(){
         </div>
         ${customSurRows}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">${t('settSurTitle')||'Zapisz dopłaty'}</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">${t('settSaveSur')||'Zapisz dopłaty'}</button>
     </div>`;
 }
 function saveCustomTypePrices(type){
@@ -810,16 +838,10 @@ async function exportAllData(){
     const json=JSON.stringify(backup,null,2);
     const today=new Date();
     const ds=`${p2(today.getDate())}_${p2(today.getMonth()+1)}_${today.getFullYear()}`;
-    const pw=prompt(t('backupPwPrompt')||'Hasło administratora (puste = eksport bez szyfrowania):');
-    if(pw===null)return; // user cancelled
+    const storedPw=localStorage.getItem('rl2_export_pw')||'';
     const a=document.createElement('a');
-    if(pw.length>0){
-      const adminUser=users.find(u=>u.role==='admin');
-      if(!adminUser||!(await verifyPw(pw,adminUser.passwordHash))){
-        if(msg){msg.textContent=t('backupPwWrong')||'Błędne hasło — eksport anulowany.';msg.style.color='var(--red)';}
-        return;
-      }
-      const encrypted=await _rlxEncrypt(json,pw);
+    if(storedPw.length>0){
+      const encrypted=await _rlxEncrypt(json,storedPw);
       const blob=new Blob([encrypted],{type:'application/octet-stream'});
       a.href=URL.createObjectURL(blob);
       a.download=`relax_backup_${ds}.rlx`;
@@ -843,9 +865,9 @@ function importAllData(){
       if(file.name.endsWith('.rlx')){
         const buf=await file.arrayBuffer();
         const bytes=new Uint8Array(buf);
-        const pw=prompt(t('backupDecryptPw')||'Hasło do odszyfrowania:');
-        if(pw===null)return;
-        const plain=await _rlxDecrypt(bytes,pw);
+        const storedPw=localStorage.getItem('rl2_export_pw')||'';
+        if(!storedPw){if(msg){msg.textContent=(t('settExportPwHint')||'Ustaw hasło eksportu w Panelu administratora przed importem.');msg.style.color='var(--red)';}return;}
+        const plain=await _rlxDecrypt(bytes,storedPw);
         if(!plain){if(msg){msg.textContent=t('backupDecryptFailed')||'Błędne hasło lub uszkodzony plik.';msg.style.color='var(--red)';}return;}
         data=JSON.parse(plain);
       } else {

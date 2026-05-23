@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSessions: (json)      => ipcRenderer.invoke('db:saveSessions', json),
   kvGet:        (key)       => ipcRenderer.invoke('db:kvGet', key),
   kvSet:        (key, val)  => ipcRenderer.invoke('db:kvSet', key, val),
+  generatePDF:  (name)      => ipcRenderer.invoke('win:generatePDF', name),
   savePDF:      (html, name)=> ipcRenderer.invoke('win:savePDF', html, name),
   focus:        ()          => ipcRenderer.invoke('win:focus'),
   hashPw:       (pw)        => ipcRenderer.invoke('auth:hashPw', pw),

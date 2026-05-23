@@ -108,6 +108,7 @@ function openNewRental(){
   const chEl=document.getElementById('fn-change');if(chEl){chEl.textContent='— zł';chEl.style.color='var(--acc)';}
   document.getElementById('cash-sec').style.display='none';
   const payEl=document.getElementById('fn-payment');if(payEl)payEl.value='';
+  const discEl=document.getElementById('fn-discount');if(discEl)discEl.value='0';
   addVehicleRow();openM('m-new');
 }
 
@@ -195,7 +196,22 @@ function renderVehicleRows(){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('total-price-lbl').textContent=vehicleRows.reduce((s,v)=>s+v.price,0)>0?`${t('totalPrice')||'Łącznie'}: ${vehicleRows.reduce((s,v)=>s+v.price,0)} zł`:'';
+  updateDiscount();
+}
+
+function updateDiscount(){
+  const pct=parseInt(document.getElementById('fn-discount')?.value||'0');
+  const base=vehicleRows.reduce((s,v)=>s+v.price,0);
+  const disc=Math.round(base*pct/100);
+  const tot=base-disc;
+  const lbl=document.getElementById('total-price-lbl');
+  if(!lbl)return;
+  if(tot>0){
+    lbl.textContent=pct>0?`${t('totalPrice')||'Łącznie'}: ${tot} zł (-${disc} zł)`:
+      `${t('totalPrice')||'Łącznie'}: ${tot} zł`;
+  } else {
+    lbl.textContent='';
+  }
 }
 
 function updateVnumOnly(id,val){
@@ -250,7 +266,9 @@ function updateVRow(id,field,val){
 
 function calcChange(){
   if(payMode!=='cash')return;
-  const tot=vehicleRows.reduce((s,v)=>s+v.price,0);
+  const base=vehicleRows.reduce((s,v)=>s+v.price,0);
+  const discPct=parseInt(document.getElementById('fn-discount')?.value||'0');
+  const tot=Math.round(base*(100-discPct)/100);
   const cash=parseFloat(document.getElementById('fn-cash').value)||0;
   const ch=cash-tot;const el=document.getElementById('fn-change');
   if(cash>0){el.textContent=(ch>=0?''+ch.toFixed(2):'-'+Math.abs(ch).toFixed(2))+' zł';el.style.color=ch>=0?'var(--green)':'var(--red)';}
@@ -285,7 +303,9 @@ function addRental(){
   }
   if(!ok)return;
   const dur=vehicleRows[0].dur;
-  const tp=vehicleRows.reduce((s,v)=>s+v.price,0);
+  const basePrice=vehicleRows.reduce((s,v)=>s+v.price,0);
+  const discPct=parseInt(document.getElementById('fn-discount')?.value||'0');
+  const tp=Math.round(basePrice*(100-discPct)/100);
   rentals.push({id:uid(),name:ne.value.trim(),doctype:document.getElementById('fn-doctype').value,docnum:de.value.trim(),vehicles:vehicleRows.map(v=>({...v})),duration:dur,totalPrice:tp,notes:document.getElementById('fn-notes').value.trim(),startTs:Date.now(),active:true,finalSurcharge:0,createdBy:currentUser.name});
   IAPI.saveRentals(rentals);closeM('m-new');renderRentals();
 }

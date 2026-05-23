@@ -93,6 +93,24 @@ ipcMain.handle('db:kvSet', (_, key, val) => {
   flush(); return true;
 });
 
+ipcMain.handle('win:generatePDF', async (event, defaultName) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const { filePath, canceled } = await dialog.showSaveDialog(win, {
+    title: 'Zapisz raport dzienny',
+    defaultPath: defaultName || 'raport.pdf',
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+  if (canceled || !filePath) return false;
+  try {
+    const data = await win.webContents.printToPDF({ printBackground: true, marginsType: 1 });
+    fs.writeFileSync(filePath, data);
+    return true;
+  } catch(e) {
+    console.error('PDF error:', e);
+    throw e;
+  }
+});
+
 ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
   const mainWin = BrowserWindow.fromWebContents(event.sender);
   // Show save dialog FIRST while main window still has focus
