@@ -58,7 +58,7 @@ function buildReportData(){
   return rows;
 }
 
-function exportReportPDF(){
+async function exportReportPDF(){
   let fields;try{const r=localStorage.getItem('rl2_pdf_fields');fields=r?JSON.parse(r):null;}catch(e){fields=null;}
   if(!fields||!fields.length)return;
   const today=new Date();
@@ -68,7 +68,7 @@ function exportReportPDF(){
   const addRow=(label,value)=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;color:#333">${label}</td><td style="padding:7px 10px;border-bottom:1px solid #ddd;font-size:14px;font-weight:700;color:#111;text-align:right">${value}</td></tr>`;
   const tableRows=rows.map(r=>addRow(r[0],r[1])).join('');
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Raport dzienny — ${dateStr}</title>
-  <style>body{font-family:Arial,sans-serif;margin:32px;color:#111;}@media print{body{margin:16px;}@page{margin:18mm;}}
+  <style>body{font-family:Arial,sans-serif;margin:32px;color:#111;}@media print{body{margin:0;}@page{margin:18mm;}}
   .date-bar{background:#222;color:#fff;padding:10px 18px;font-size:13px;font-weight:700;margin-bottom:0;display:flex;align-items:center;gap:30px;border-radius:3px 3px 0 0;}
   .date-bar .lbl{color:#aaa;font-size:11px;margin-right:6px;}
   table{width:100%;border-collapse:collapse;}
@@ -82,10 +82,12 @@ function exportReportPDF(){
   <table><thead><tr><th>POZYCJA</th><th style="text-align:right">WARTOŚĆ</th></tr></thead><tbody>${tableRows}</tbody></table></div>
   <div class="footer">Relax Wypożyczalnia • Raport dzienny • ${dateStr}</div>
   </body></html>`;
-  const a=document.createElement('a');
-  a.href='data:text/html;charset=utf-8,'+encodeURIComponent(html);
-  a.download=`relax_raport_${pdfDate}.html`;
-  document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);},500);
+  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.savePDF){
+    await window.electronAPI.savePDF(html,`relax_raport_${pdfDate}.pdf`);
+  } else {
+    const w=window.open('','_blank','width=800,height=600');
+    if(w){w.document.write(html+'<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>');w.document.close();}
+  }
 }
 
 function exportReportCSV(){

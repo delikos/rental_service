@@ -60,9 +60,9 @@ function renderSettings(){
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)">
                 <div style="font-size:11px;color:var(--t2);flex-shrink:0;min-width:50px">Język:</div>
                 <div style="display:flex;gap:4px;flex:1">
-                  <button onclick="setUserLang('${u.id}','pl')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${(u.lang||'pl')==='pl'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Polski">🇵🇱</button>
-                  <button onclick="setUserLang('${u.id}','en')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='en'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="English">🇬🇧</button>
-                  <button onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
+                  <button id="lang-btn-${u.id}-pl" onclick="setUserLang('${u.id}','pl')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${(u.lang||'pl')==='pl'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Polski">🇵🇱</button>
+                  <button id="lang-btn-${u.id}-en" onclick="setUserLang('${u.id}','en')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='en'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="English">🇬🇧</button>
+                  <button id="lang-btn-${u.id}-uk" onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
                 </div>
               </div>
               <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Zmień hasło administratora</div>
@@ -71,14 +71,14 @@ function renderSettings(){
                 <div class="fr" style="margin-bottom:8px"><label>Powtórz hasło</label><input type="password" id="adm-pw2" placeholder="Powtórz" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
               </div>
               <div id="adm-pw-msg" style="font-size:11px;min-height:14px;margin-bottom:6px"></div>
-              <button class="btn btn-p" onclick="saveAdminPw()" style="width:100%">Zapisz hasło administratora</button>
+              <button class="btn btn-p" onclick="saveAdminPw()" style="width:auto;padding:0 14px;height:30px;font-size:11px">Zapisz hasło</button>
             </div>`:''}
           </div>
         </div>`;
       }).join('')}
       <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end">
         <div style="flex:1"><input id="new-uname" placeholder="Imię i nazwisko nowego pracownika" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
-        <button class="btn btn-p" style="flex-shrink:0" onclick="addUser()">Dodaj pracownika</button>
+        <button class="btn btn-p" style="flex:none;width:auto;padding:0 14px;height:30px;font-size:11px" onclick="addUser()">Dodaj pracownika</button>
       </div>
     </div>
 
@@ -86,6 +86,9 @@ function renderSettings(){
       <h3 style="display:flex;align-items:center;justify-content:space-between">Cennik <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-prices')">Edytuj →</button></h3>
     </div>
 
+    <div class="sett-card">
+      <h3 style="display:flex;align-items:center;justify-content:space-between">Sprzęt <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} pojazdów</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">Zarządzaj →</button></h3>
+    </div>
 
     <div class="sett-card">
       <details>
@@ -116,8 +119,28 @@ function renderSettings(){
         </div>
       </details>
     </div>
+
     <div class="sett-card">
-      <h3 style="display:flex;align-items:center;justify-content:space-between">Sprzęt <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} pojazdów</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">Zarządzaj →</button></h3>
+      <details>
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
+          Kopia zapasowa danych
+          <span style="font-size:10px;color:var(--t3)">▼</span>
+        </summary>
+        <div style="margin-top:12px">
+          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Eksportuj dane
+            </button>
+            <button class="btn btn-g" onclick="importAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Importuj dane
+            </button>
+          </div>
+          <div id="backup-msg" style="font-size:11px;color:var(--t3);margin-top:8px"></div>
+        </div>
+      </details>
     </div>`
 }
 function toggleUserCard(uid){
@@ -169,20 +192,29 @@ function renderSettingsUser(){
         <button class="btn btn-p" onclick="saveUserPw()" style="width:100%">${t('savePw')||'Zapisz nowe hasło'}</button>
       </div>
     </div>
+    <div style="max-width:460px">
     <div class="sett-card">
-      <h3>Kopia zapasowa danych</h3>
-      <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Eksportuj dane
-        </button>
-        <button class="btn btn-g" onclick="importAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Importuj dane
-        </button>
-      </div>
-      <div id="backup-msg" style="font-size:11px;color:var(--t3);margin-top:8px"></div>
+      <details>
+        <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
+          Kopia zapasowa danych
+          <span style="font-size:10px;color:var(--t3)">▼</span>
+        </summary>
+        <div style="margin-top:12px">
+          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Eksportuj dane
+            </button>
+            <button class="btn btn-g" onclick="importAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Importuj dane
+            </button>
+          </div>
+          <div id="backup-msg" style="font-size:11px;color:var(--t3);margin-top:8px"></div>
+        </div>
+      </details>
+    </div>
     </div>
     `
 }
@@ -217,6 +249,7 @@ function setUserLang(uid,lang){
   const u=users.find(x=>x.id===uid);if(!u)return;
   u.lang=lang;
   IAPI.saveUsers(users);
+  if(currentUser&&u.id===currentUser.id){currentUser.lang=lang;applyLang();}
   ['pl','en','uk'].forEach(l=>{
     const btn=document.getElementById('lang-btn-'+uid+'-'+l);
     if(btn)btn.style.borderColor=l===lang?'var(--acc)':'var(--bd)';
@@ -473,29 +506,12 @@ function addFleetVehicle(){
   const typeVal=capitalize(rawType);
   const modelVal=capitalize(rawModel);
   const typeLower=typeVal.toLowerCase();
-  const numList=numVal.split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
-  numList.sort((a,b)=>{const x=parseInt(a),y=parseInt(b);return(isNaN(x)||isNaN(y))?a.localeCompare(b):x-y;});
-  if(numList.length>1){
-    let addedCount=0;
-    for(const nv of numList){
-      const np=parseInt(nv);
-      const singleNum=isNaN(np)?nv:String(np);
-      const dup=FLEET.find(f=>f.model.toLowerCase()===modelVal.toLowerCase()&&f.num===singleNum&&f.type===typeLower);
-      if(!dup){FLEET.push({type:typeLower,model:modelVal,num:singleNum});addedCount++;}
-    }
-    if(addedCount>0){saveFleet();renderCennikPanel();renderSettingsEquipment();}
-    else{if(errEl)errEl.textContent='Wszystkie podane numery już istnieją.';}
-    return;
-  }
   const numParsed=parseInt(numVal);
   const num=isNaN(numParsed)?numVal:String(numParsed);
   const finalModelVal=((document.getElementById('eq-model')?.value||'').trim()||typeVal);
   const finalCapModel=capitalize(finalModelVal);
-  const dup=FLEET.find(f=>f.model.toLowerCase()===finalCapModel.toLowerCase()&&f.num===num&&f.type===typeLower);
-  if(dup){if(errEl)errEl.textContent=`Pojazd "${modelVal}" nr "${num}" już istnieje.`;return;}
-  if(errEl)errEl.textContent='';
 
-  // Check model within the same type only (a "Rower" in type "kajak" is a different model)
+  // Check model within the same type only
   let sameTypeExistingModels=[];
   if(typeLower==='gokart')sameTypeExistingModels=KARTS.map(k=>k.name.toLowerCase());
   else if(typeLower==='rower')sameTypeExistingModels=['rower'];
@@ -507,7 +523,6 @@ function addFleetVehicle(){
   if(isNewModel||hasPriceInput||hasSurcharge){
     const p30=parseInt(document.getElementById('eq-price30')?.value)||0;
     const dur30=parseInt(document.getElementById('eq-dur30-sel')?.value)||30;
-    const p60=0;
     const durs=[];
     const durInputs=document.querySelectorAll('#eq-extra-durs .eq-dur-row');
     durInputs.forEach(row=>{
@@ -531,6 +546,25 @@ function addFleetVehicle(){
       localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
     }catch(e){}
   }
+
+  const numList=numVal.split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+  numList.sort((a,b)=>{const x=parseInt(a),y=parseInt(b);return(isNaN(x)||isNaN(y))?a.localeCompare(b):x-y;});
+  if(numList.length>1){
+    let addedCount=0;
+    for(const nv of numList){
+      const np=parseInt(nv);
+      const singleNum=isNaN(np)?nv:String(np);
+      const dup=FLEET.find(f=>f.model.toLowerCase()===finalCapModel.toLowerCase()&&f.num===singleNum&&f.type===typeLower);
+      if(!dup){FLEET.push({type:typeLower,model:finalCapModel,num:singleNum});addedCount++;}
+    }
+    if(addedCount>0){saveFleet();renderCennikPanel();renderSettingsEquipment();}
+    else{if(errEl)errEl.textContent='Wszystkie podane numery już istnieją.';}
+    return;
+  }
+
+  const dup=FLEET.find(f=>f.model.toLowerCase()===finalCapModel.toLowerCase()&&f.num===num&&f.type===typeLower);
+  if(dup){if(errEl)errEl.textContent=`Pojazd "${finalCapModel}" nr "${num}" już istnieje.`;return;}
+  if(errEl)errEl.textContent='';
 
   FLEET.push({type:typeLower,model:finalCapModel,num});
   saveFleet();
@@ -633,7 +667,75 @@ function renderSettingsPrices(){
             </div>
           </div>`).join('')}
       <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty</button>
-    </div>`;
+    </div>
+    ${(()=>{
+      try{
+        const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+        const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+        if(!customTypes.length)return '';
+        return customTypes.map(type=>{
+          const entries=cp[type]||[];
+          if(!entries.length)return `<div class="sett-card"><h3>${type.charAt(0).toUpperCase()+type.slice(1)} <span style="font-weight:400;color:var(--t3);font-size:10px">— brak cen</span></h3><div style="font-size:11px;color:var(--t2)">Dodaj pojazdy z cenami w <button onclick="showV('settings-equipment')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:11px;padding:0;font-family:var(--font)">Zarządzaniu sprzętem</button>.</div></div>`;
+          const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
+          return `<div class="sett-card">
+            <h3>${typeLabel}</h3>
+            ${entries.map((e,ei)=>{
+              const allDurs=[];
+              if(e.durs&&e.durs.length)e.durs.forEach(d=>allDurs.push({v:d.v,p:d.p}));
+              else{if(e.p&&e.p[30]>0)allDurs.push({v:30,p:e.p[30]});if(e.p&&e.p[60]>0)allDurs.push({v:60,p:e.p[60]});}
+              const presets=[[30,'30 min'],[60,'1 godz.'],[90,'90 min'],[120,'2 godz.'],[180,'3 godz.'],[240,'4 godz.'],[360,'6 godz.'],[720,'12 godz.'],[1440,'Cały dzień']];
+              return `<div style="margin-bottom:10px">
+                <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px">${e.name.toUpperCase()}</div>
+                <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden;margin-bottom:6px">
+                  <div style="display:grid;grid-template-columns:1fr 76px 26px;gap:4px;background:#1a1a1a;padding:4px 8px;align-items:center">
+                    <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">CZAS</div>
+                    <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div>
+                    <div></div>
+                  </div>
+                  ${allDurs.map((d,di)=>`
+                  <div style="display:grid;grid-template-columns:1fr 76px 26px;gap:4px;padding:4px 8px;border-top:1px solid var(--bd);align-items:center">
+                    <select id="cp-${type}-${ei}-dur-${di}" style="background:var(--s3);border:1px solid var(--bd);border-radius:3px;padding:3px 4px;font-family:var(--mono);font-size:11px;color:var(--t1);outline:none">${presets.map(([v,l])=>`<option value="${v}"${v==d.v?' selected':''}>${l}</option>`).join('')}</select>
+                    <div style="display:flex;align-items:center;gap:2px;justify-content:center">
+                      <input type="number" id="cp-${type}-${ei}-price-${di}" value="${d.p}" min="0" style="${inpSt}">
+                      <span style="${zlSt}">zł</span>
+                    </div>
+                    <button onclick="this.closest('[data-entry]').querySelector('[data-durs]').children[${di}]?.remove();saveCustomTypePrices('${type}')" style="height:22px;width:22px;border-radius:3px;border:1px solid rgba(232,64,64,.2);background:rgba(232,64,64,.08);color:var(--red);cursor:pointer;font-size:11px">✕</button>
+                  </div>`).join('')}
+                  <div style="background:#1a1a1a;padding:3px 8px;text-align:right">
+                    <button onclick="addCustomTypeDurRow('${type}',${ei})" style="height:20px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">+ Dodaj czas</button>
+                  </div>
+                </div>
+                ${e.surcharges&&e.surcharges.length?`<div style="font-size:10px;color:var(--t2);margin-bottom:4px">Dopłaty: ${e.surcharges.filter(s=>s.perHour>0).map(s=>`po ${s.graceMin} min → +${s.perHour} zł/godz.`).join(', ')}</div>`:''}
+              </div>`;
+            }).join('')}
+            <button class="btn btn-p" style="margin-top:4px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">Zapisz ${type}</button>
+          </div>`;
+        }).join('');
+      }catch(e){return '';}
+    })()}
+    `;
+}
+function saveCustomTypePrices(type){
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entries=cp[type]||[];
+    entries.forEach((e,ei)=>{
+      const newDurs=[];
+      document.querySelectorAll(`[id^="cp-${type}-${ei}-dur-"]`).forEach((sel,di)=>{
+        const priceEl=document.getElementById(`cp-${type}-${ei}-price-${di}`);
+        const v=parseInt(sel.value)||0;
+        const p=parseInt(priceEl?.value)||0;
+        if(v>0)newDurs.push({v,p});
+      });
+      e.durs=newDurs;
+      e.p={30:newDurs.find(d=>d.v===30)?.p||0,60:newDurs.find(d=>d.v===60)?.p||0};
+    });
+    localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
+    renderCennikPanel();
+    const btn=event.target;const orig=btn.textContent;
+    btn.textContent='✓ Zapisano';btn.style.background='var(--green)';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
+  }catch(e){}
 }
 
 function togglePriceEdit(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
@@ -731,5 +833,5 @@ function importAllData(){
       setTimeout(()=>window.location.reload(),800);
     }catch(e){if(msg){msg.textContent='Błąd importu: '+e.message;msg.style.color='var(--red)';}}
   };
-  document.body.appendChild(inp);inp.click();setTimeout(()=>document.body.removeChild(inp),500);
+  inp.click();
 }

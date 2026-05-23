@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 
@@ -71,6 +71,26 @@ ipcMain.handle('db:kvGet', (_, key) => {
 ipcMain.handle('db:kvSet', (_, key, val) => {
   db.run('INSERT OR REPLACE INTO kv(key,value) VALUES(?,?)', [key, val]);
   flush(); return true;
+});
+
+ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
+  const hidden = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+  try {
+    await hidden.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent));
+    await new Promise(resolve => hidden.webContents.once('did-finish-load', resolve));
+    const pdfData = await hidden.webContents.printToPDF({ printBackground: true });
+    hidden.close();
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      defaultPath: defaultName || 'raport.pdf',
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    });
+    if (canceled || !filePath) return false;
+    fs.writeFileSync(filePath, pdfData);
+    return true;
+  } catch(e) {
+    try { hidden.close(); } catch(_) {}
+    throw e;
+  }
 });
 
 ipcMain.handle('win:minimize', () => BrowserWindow.getFocusedWindow()?.minimize());

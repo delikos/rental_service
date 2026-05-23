@@ -98,7 +98,7 @@ function openNewRental(){
   setOpt('opt-cash',t('cash'));
   setOpt('opt-card',t('card'));
   setP('fn-notes',t('optional'));
-  setP('fn-name-input',t('phName')||'Jan Kowalski lub 501 234 567');
+  setP('fn-name-input',t('phName')||'Jan Kowalski lub 737 404 100');
   setP('fn-docnum',t('phDoc')||'ABC123456');
   const dt=document.getElementById('fn-doctype');
   if(dt){dt.options[0].text=t('docId');dt.options[1].text=t('docDl');dt.options[2].text=t('docOther');}

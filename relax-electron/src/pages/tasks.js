@@ -10,7 +10,7 @@ function renderTasks(){
   document.getElementById('content').innerHTML=`
     <div class="sett-card">
       <h3>${t('tasksList')||'Lista zadań'} (${tasks.length})</h3>
-      ${tasks.length===0?`<div style="color:var(--t3);font-size:13px;padding:8px 0">Brak zadań</div>`:
+      ${tasks.length===0?`<div style="color:var(--t3);font-size:13px;padding:8px 0">${t('tasksNone')||'Brak zadań'}</div>`:
         tasks.slice().reverse().map(tk=>`
           <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:12px 14px;margin-bottom:10px">
             <div style="display:flex;align-items:flex-start;gap:10px">
@@ -53,12 +53,12 @@ function renderTasks(){
       </div>
       <div id="task-err" style="color:var(--red);font-size:11px;min-height:14px;margin-bottom:6px"></div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-p" id="task-save-btn" onclick="addTask()" style="width:auto;padding:0 16px;height:30px;font-size:11px">${t('tasksSave')||'Zapisz zadanie'}</button>
+        <button class="btn btn-p" id="task-save-btn" onclick="addTask()" style="flex:none;width:auto;padding:0 16px;height:30px;font-size:11px">${t('tasksSave')||'Zapisz zadanie'}</button>
         <button class="btn btn-g" onclick="toggleTaskForm()" style="width:auto;padding:0 16px;height:30px;font-size:11px">${t('tasksCancel')||'Anuluj'}</button>
       </div>
     </div>
     </div>
-    <button class="btn btn-p" style="width:auto;padding:0 14px;height:30px;font-size:11px;margin-top:4px" onclick="toggleTaskForm()">${t('tasksNew')||'+ Nowe zadanie'}</button>`;
+    <div style="margin-top:4px"><button class="btn btn-p" style="flex:none;width:auto;padding:0 14px;height:30px;font-size:11px" onclick="toggleTaskForm()">${t('tasksNew')||'+ Nowe zadanie'}</button></div>`;
 }
 
 function toggleTaskForm(){
