@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"/mnt/c/Users/krold/Desktop/relax-electron/relax-electron/src/index.html\")",
+      "Read(//mnt/c/Users/krold/Desktop/relax-electron/relax-electron/src/**)"
+    ]
+  }
+}

@@ -1,0 +1,1122 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: https://fonts.googleapis.com https://fonts.gstatic.com;">
+<title>Relax — Wypożyczalnia</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111;--s1:#191919;--s2:#202020;--s3:#282828;--s4:#323232;
+  --bd:#2e2e2e;--bd2:#3a3a3a;
+  --t1:#f0f0f0;--t2:#909090;--t3:#555;
+  --acc:#f07a1a;--acc2:#e06810;--acc-dim:rgba(240,122,26,.12);--acc-glow:rgba(240,122,26,.25);
+  --green:#28c77a;--red:#e84040;--orange:#f09020;--yellow:#f0c020;
+  --r:10px;--rsm:6px;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+[data-theme=light]{--bg:#f0f0f0;--s1:#fff;--s2:#f5f5f5;--s3:#e8e8e8;--s4:#ddd;--bd:#ddd;--bd2:#bbb;--t1:#111;--t2:#666;--t3:#999;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}html,body{height:100%;overflow:hidden;width:100%;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;transition:background .2s,color .2s;}
+
+/* TITLEBAR */
+#tb{height:38px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:8px;-webkit-app-region:drag;flex-shrink:0;z-index:10;}
+.tb-brand{font-size:14px;font-weight:800;letter-spacing:.02em;}
+.tb-brand .re{color:var(--t1);}
+.tb-brand .lax{color:var(--acc);}
+.tb-sub{font-size:11px;color:var(--t3);font-weight:400;margin-left:4px;}
+#tb-clock{font-family:var(--mono);font-size:12px;color:var(--t2);margin-left:auto;}
+.tb-r{display:flex;align-items:center;gap:4px;-webkit-app-region:no-drag;margin-left:8px;}
+.wbtn{width:26px;height:26px;border-radius:5px;border:none;cursor:pointer;background:none;color:var(--t3);display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .12s;}
+.wbtn:hover{background:var(--s3);color:var(--t1);}
+.wbtn.cl:hover{background:rgba(232,64,64,.18);color:var(--red);}
+#theme-btn{width:28px;height:16px;border-radius:8px;border:none;cursor:pointer;-webkit-app-region:no-drag;background:var(--bd2);position:relative;padding:0;transition:background .2s;}
+#theme-btn::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:transform .2s;}
+[data-theme=light] #theme-btn{background:var(--acc);}
+[data-theme=light] #theme-btn::after{transform:translateX(12px);background:#fff;}
+
+/* APP LAYOUT */
+#app{display:flex;flex:1;overflow:hidden;position:relative;min-width:0;max-width:100%;}
+
+/* SIDEBAR */
+#sb{width:50px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:flex-start;padding:8px 0;gap:1px;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;flex-shrink:0;z-index:5;}
+#sb.exp{width:186px;}
+.stoggle{width:34px;height:34px;border-radius:var(--rsm);border:none;cursor:pointer;background:none;color:var(--t3);display:flex;align-items:center;justify-content:center;transition:all .12s;margin:0 8px 6px 8px;flex-shrink:0;}
+.stoggle:hover{background:var(--s3);color:var(--t2);}
+.nitem{width:calc(100% - 8px);display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--rsm);cursor:pointer;color:var(--t2);font-size:12px;font-weight:500;white-space:nowrap;border:none;background:none;transition:all .12s;text-align:left;margin:0 4px;}
+.nitem:hover{background:var(--s3);color:var(--t1);}
+.nitem.act{background:var(--acc-dim);color:var(--acc);}
+.nitem svg{flex-shrink:0;width:17px;height:17px;}
+.nlbl{opacity:0;transition:opacity .15s .04s;pointer-events:none;font-size:12px;}
+#sb.exp .nlbl{opacity:1;}
+.nsep{width:32px;height:1px;background:var(--bd);margin:5px 8px;transition:width .22s;}
+#sb.exp .nsep{width:calc(100% - 16px);}
+.nspacer{flex:1;}
+
+/* MAIN */
+#main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;transition:margin-right .22s cubic-bezier(.4,0,.2,1);}
+#topbar{height:50px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0;}
+#view-title{font-size:14px;font-weight:700;min-width:120px;}
+.upill{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;padding:3px 11px 3px 3px;font-size:12px;font-weight:500;cursor:pointer;transition:border-color .12s;}
+.upill:hover{border-color:var(--bd2);}
+.uav{width:24px;height:24px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.uav.adm{background:#7c3aed;}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:18px 18px 18px 18px;}
+#content::-webkit-scrollbar{width:4px;}
+#content::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.scard{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:13px 15px;}
+.slbl{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
+.sval{font-size:24px;font-weight:700;font-family:var(--mono);line-height:1;}
+
+/* LIST HEADER */
+/* ── RENTAL LIST LAYOUT ─────────────────────────────── */
+/* Scalable grid: klient | sprzet | czas | start/koniec | kwota | dopłata | akcje */
+/* ── RENTAL LIST LAYOUT ── */
+/* grid: klient | sprzet(flex) | czas | start/koniec | kwota(auto) | dopłata(auto) | akcje */
+/* ── RENTAL GRID ── klient | sprzet | czas | start/koniec | kwota | dopłata | akcje */
+.lh{display:grid;grid-template-columns:150px minmax(0,1fr) 80px 190px 76px 76px 76px;gap:0;padding:0 12px 5px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.rlist{display:flex;flex-direction:column;gap:4px;}
+.rrow{display:grid;grid-template-columns:150px minmax(0,1fr) 80px 190px 76px 76px 76px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:0 12px;align-items:stretch;min-height:68px;transition:border-color .15s;}
+/* Cennik open: main shrinks */
+body.cp-open #main{margin-right:24%;transition:margin-right .22s cubic-bezier(.4,0,.2,1);}
+/* Menu + cennik: kwota ma 90px żeby zmieściło się "25 zł" z paddingiem, sprzet shrinks */
+body.cp-open.sb-cp .lh{grid-template-columns:150px minmax(0,1fr) 80px 183px 90px 82px 82px;}
+body.cp-open.sb-cp .rrow{grid-template-columns:150px minmax(0,1fr) 80px 183px 90px 82px 82px;}
+/* Kwota/dopłata values */
+.priceval{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap;}
+.surval{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--red);white-space:nowrap;}
+.surval.none{color:var(--t3);font-size:11px;}
+.rrow:hover{border-color:var(--bd2);}
+.rrow.warn{background:rgba(240,144,32,.07);border-color:rgba(240,144,32,.32);}
+.rrow.over{background:rgba(232,64,64,.07);border-color:rgba(232,64,64,.32);}
+.rc{display:flex;flex-direction:column;justify-content:center;padding:9px 10px 9px 0;border-right:1px solid var(--bd);}
+.rc:first-child{padding-left:0;}
+/* Both kwota and dopłata need padding-left fix (all .rc cells have left=0 from shorthand) */
+/* longhand !important beats shorthand — no align-items change, no height change */
+.rc.rc-kwota{
+  padding:9px 10px;
+}
+.rc.rc-kwota,
+.rc.rc-kwota .priceval{
+  align-items:flex-start!important;
+  text-align:left!important;
+}
+/* DOPŁATA: same left padding as kwota + center content in its cell */
+.rc.rc-dopłata{padding-left:10px!important;display:flex!important;justify-content:center!important;flex-direction:column!important;align-items:center!important;}
+.rc:last-child{border-right:none;}
+.rname{font-size:12px;font-weight:600;}
+.rsub{font-size:10px;color:var(--t2);margin-top:2px;}
+.rnote{font-size:9px;color:#fff;margin-top:2px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.vlist{display:flex;flex-direction:column;gap:3px;overflow:hidden;}
+.vitem{font-size:11px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;overflow:hidden;}
+.vtag{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;}
+.vtag.k{background:rgba(124,58,237,.15);color:#a78bfa;}
+.vtag.b{background:rgba(40,199,122,.12);color:var(--green);}
+
+/* TIME — inline, not stacked */
+.tblock{display:flex;flex-direction:column;gap:5px;overflow:hidden;}
+.tentry{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;}
+.tlbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);width:22px;flex-shrink:0;}
+.thm{font-family:var(--mono);font-size:18px;font-weight:600;line-height:1;color:var(--t1);flex-shrink:0;}
+.tdate{font-size:9px;color:var(--t2);flex-shrink:0;}
+.tend-warn .thm{color:var(--orange);}
+.tend-over .thm{color:var(--red);}
+.oi{font-size:8px;font-weight:700;padding:1px 3px;border-radius:3px;display:block;margin-top:2px;white-space:nowrap;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;}
+.sdot.w{background:var(--orange);}
+.sdot.o{background:var(--red);animation:blink 1s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.acts{display:flex;flex-direction:row;align-items:center;gap:4px;padding-left:8px;}
+.ibtn{width:26px;height:26px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all .12s;}
+.ibtn:hover{background:var(--s3);color:var(--t1);border-color:var(--bd2);}
+.ibtn.del:hover{background:rgba(232,64,64,.1);color:var(--red);border-color:rgba(232,64,64,.3);}
+.ibtn.end-btn:hover{background:rgba(40,199,122,.1);color:var(--green);border-color:rgba(40,199,122,.3);}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;gap:10px;color:var(--t3);}
+.empty p{font-size:13px;}
+
+/* FAB */
+.fab-wrap{display:flex;flex-direction:row;align-items:center;gap:7px;flex:1;justify-content:center;}
+.fab{height:42px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:0 16px;font-family:var(--font);font-size:12px;font-weight:600;transition:all .14s;}
+.fab-p{background:var(--acc);color:#fff;box-shadow:0 3px 16px var(--acc-glow);}
+.fab-p:hover{background:var(--acc2);transform:translateY(-1px);}
+.fab-s{background:var(--s2);color:var(--t1);border:1px solid var(--bd);}
+.fab-s:hover{background:var(--s3);border-color:var(--bd2);}
+
+/* CENNIK PANEL */
+#cp{position:fixed;top:38px;right:0;width:0;height:calc(100% - 38px);background:var(--s1);border-left:1px solid var(--bd);overflow:hidden;transition:width .22s cubic-bezier(.4,0,.2,1);z-index:200;display:flex;flex-direction:column;}
+#cp.no-transition{transition:none;}
+#cp.open{width:24.5%;}
+.cp-toggle{position:fixed;top:50%;right:0;transform:translateY(-50%);width:18px;height:48px;background:var(--s3);border:1px solid var(--bd2);border-right:none;cursor:pointer;border-radius:6px 0 0 6px;z-index:201;transition:right .22s cubic-bezier(.4,0,.2,1),background .12s;color:var(--t2);display:flex;align-items:center;justify-content:center;}
+.cp-toggle.no-transition{transition:none;}
+.cp-toggle:hover{background:var(--s4);color:var(--t1);}
+.cp-toggle.open{right:24.5%;}
+.cp-toggle svg{transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.cp-toggle.open svg{transform:rotate(180deg);}
+.cp-inner{overflow-y:auto;flex:1;display:flex;flex-direction:column;}
+.cp-inner::-webkit-scrollbar{width:3px;}
+.cp-inner::-webkit-scrollbar-thumb{background:rgba(0,0,0,.3);border-radius:2px;}
+.cp-bd-orange{background:linear-gradient(180deg,#c96a10 0%,#d4721a 100%);padding:8px;}
+.cp-bd-dark{background:#191919;padding:8px;flex:1;border-top:2px solid #c96a10;}
+/* In dark section, header/cell colors stay identical to orange section */
+.cp-bd-dark .cp-sec{background:rgba(255,255,255,.06);color:#fff;}
+.cp-bd-dark .cp-ch{background:#1a1a1a;color:#fff;}
+.cp-bd-dark .cp-n{background:#fff;color:#111;}
+.cp-bd-dark .cp-p{background:#3a3a3a;color:#fff;}
+.cp-hdr{background:#1a1a1a;padding:8px 10px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:2px solid var(--acc);}
+.cp-hdr-brand{font-size:13px;font-weight:800;justify-self:start;}.cp-hdr-brand .re{color:#fff;}.cp-hdr-brand .lax{color:var(--acc);}
+.cp-x{width:22px;height:22px;border-radius:4px;border:none;background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:12px;justify-self:end;}
+.cp-x:hover{background:rgba(232,64,64,.2);color:var(--red);}
+.cp-bd{padding:8px;}
+.cp-sec{font-size:11px;font-weight:800;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.35);border-radius:4px;padding:6px 0;margin:8px 0 5px;}
+.cp-cols3{display:grid;grid-template-columns:1fr 58px 58px;gap:3px;margin-bottom:3px;}
+.cp-cols2{display:grid;grid-template-columns:1fr 72px;gap:3px;margin-bottom:3px;}
+.cp-ch{background:#1a1a1a;color:#fff;font-size:9px;font-weight:800;text-align:center;padding:5px 3px;border-radius:4px;text-transform:uppercase;}
+.cp-ch.l{text-align:left;padding-left:8px;}
+.cp-r3{display:grid;grid-template-columns:1fr 58px 58px;gap:3px;margin-bottom:2px;}
+.cp-r2{display:grid;grid-template-columns:1fr 72px;gap:3px;margin-bottom:2px;}
+.cp-n{background:#fff;color:#111;font-size:10px;font-weight:800;padding:5px 8px;border-radius:4px;text-align:left;text-transform:uppercase;}
+.cp-p{background:#3a3a3a;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:5px 3px;border-radius:4px;font-family:var(--mono);}
+.cp-p .z{font-size:8px;font-weight:400;opacity:.8;}
+.cp-info{background:rgba(0,0,0,.25);border-radius:5px;padding:8px;font-size:10px;color:#ddd;line-height:1.7;margin-top:3px;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .17s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:520px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.6);transform:scale(.96) translateY(10px);transition:transform .17s;}
+.overlay.open .modal{transform:scale(1) translateY(0);}
+.modal::-webkit-scrollbar{width:3px;}
+.modal::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 0;}
+.mhdr h2{font-size:15px;font-weight:700;}
+.mcls{width:24px;height:24px;border-radius:5px;border:1px solid var(--bd);background:none;cursor:pointer;color:var(--t2);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.mcls:hover{background:var(--s2);color:var(--t1);}
+.mbdy{padding:14px 18px 18px;}
+.fr{margin-bottom:11px;}
+.fr label{display:block;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+.fr input,.fr select,.fr textarea{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none;transition:border-color .12s;}
+.lang-select{
+  text-align:center!important;
+  text-align-last:center!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.lang-select option{text-align:center;}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--acc);}
+.fr input.err{border-color:var(--red)!important;box-shadow:0 0 0 2px rgba(232,64,64,.15);}
+.fr select option{background:var(--s2);color:var(--t1);}
+.fr textarea{resize:vertical;min-height:50px;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.pricebox{background:var(--acc-dim);border:1px solid rgba(240,122,26,.25);border-radius:var(--rsm);padding:9px 13px;font-family:var(--mono);font-size:20px;font-weight:700;color:var(--acc);text-align:center;}
+.factions{display:flex;gap:7px;margin-top:14px;}
+.btn{height:36px;border-radius:var(--rsm);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;padding:0 16px;transition:all .12s;}
+.btn-p{background:var(--acc);color:#fff;flex:1;}
+.btn-p:hover{background:var(--acc2);}
+.btn-g{background:var(--s2);color:var(--t2);border:1px solid var(--bd);}
+.btn-g:hover{color:var(--t1);border-color:var(--bd2);}
+
+/* VEHICLE BUILDER */
+.vbuilder{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:10px;margin-bottom:11px;}
+.vbuilder-title{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.ve-row{background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;margin-bottom:6px;position:relative;}
+.vwarn{position:absolute;top:-6px;left:-6px;width:16px;height:16px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;z-index:2;}
+.ve-remove{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:4px;border:none;background:rgba(232,64,64,.1);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.ve-remove:hover{background:rgba(232,64,64,.2);}
+.add-vbtn{width:100%;height:30px;border-radius:var(--rsm);border:1px dashed var(--bd2);background:none;color:var(--t3);cursor:pointer;font-size:11px;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.add-vbtn:hover{border-color:var(--acc);color:var(--acc);}
+.pay-row{display:flex;gap:6px;margin-bottom:9px;}
+.pay-btn{flex:1;height:34px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);font-family:var(--font);font-size:12px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.pay-btn.sel{border-color:var(--acc);background:var(--acc-dim);color:var(--acc);}
+.cash-sec{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:9px;margin-top:7px;margin-bottom:9px;}
+
+/* REPORT */
+.rg2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}
+.rst{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:13px;text-align:center;}
+.rst .rv{font-size:28px;font-weight:800;font-family:var(--mono);line-height:1;margin-bottom:3px;}
+.rst .rl{font-size:10px;color:var(--t2);}
+.karta{width:30px;height:42px;border-radius:4px;background:var(--acc);opacity:.8;}
+.karta-half{width:30px;height:21px;border-radius:4px;background:var(--acc);opacity:.5;align-self:flex-end;}
+.karta-empty{width:30px;height:42px;border-radius:4px;border:1px solid var(--bd2);}
+
+/* AVAIL */
+.avail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:9px;}
+.acard{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:13px;width:180px;flex-shrink:0;}
+.acard-name{font-size:12px;font-weight:700;margin-bottom:9px;}
+.arow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:var(--t2);}
+.arow .num{font-family:var(--mono);font-weight:600;color:var(--t1);}
+.arow .num.ok{color:var(--green);}
+.arow .num.low{color:var(--orange);}
+.arow .num.none{color:var(--red);}
+.abar{height:3px;background:var(--bd);border-radius:2px;margin-top:9px;overflow:hidden;}
+.afill{height:100%;border-radius:2px;transition:width .3s;}
+.search-vnum{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none;transition:border-color .12s;width:110px;margin-left:10px;}
+.search-vnum:focus{border-color:var(--acc);}
+
+/* TRACKER */
+.vt-grid{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.vt-row{display:grid;grid-template-columns:54px 1fr 60px;align-items:center;gap:8px;padding:8px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);cursor:pointer;transition:all .12s;}
+.vt-row:hover{border-color:var(--bd2);}
+.vt-row.sel{border-color:var(--acc);background:var(--acc-dim);}
+.vt-num{font-family:var(--mono);font-size:12px;font-weight:600;}
+.vt-time{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right;}
+.vt-detail{background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:14px;margin-top:8px;}
+
+/* SETTINGS */
+.sett-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+.sett-card h3{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bd);}
+.urow{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);margin-bottom:6px;}
+.urow-info{display:flex;align-items:center;gap:10px;}
+.urow-name{font-weight:600;font-size:13px;}
+.urow-role{font-size:10px;color:var(--t2);margin-top:2px;}
+.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.perm-item{background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:10px;display:flex;align-items:flex-start;gap:8px;}
+.perm-cb{width:16px;height:16px;accent-color:var(--acc);flex-shrink:0;margin-top:1px;}
+.perm-lbl{font-size:11px;font-weight:500;}
+.perm-sub{font-size:9px;color:var(--t3);margin-top:2px;}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;align-items:center;justify-content:center;}
+.lbox{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:36px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.ltitle{font-size:44px;font-weight:800;margin-bottom:6px;line-height:1;}
+.ltitle .re{color:var(--t1);}
+.ltitle .lax{color:var(--acc);}
+.lsub{font-size:12px;color:var(--t2);margin-bottom:28px;}
+.uopt{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .12s;margin-bottom:6px;}
+.uopt:hover{border-color:var(--acc);background:var(--acc-dim);}
+.uopt-name{font-weight:700;font-size:13px;}
+.uopt-role{font-size:10px;color:var(--t2);margin-top:1px;}
+</style>
+</head>
+<body>
+
+<div id="tb">
+  <div class="tb-brand"><span class="re">Re</span><span class="lax">lax</span></div>
+  <span class="tb-sub">— <span id="top-brand">Wypożyczalnia</span></span>
+  <div id="tb-clock"></div>
+  <div class="tb-r">
+    <button id="theme-btn" onclick="toggleTheme()" title="Tryb jasny/ciemny"></button>
+    <button class="wbtn" onclick="IAPI.minimize()" id="min-btn-title" title="Minimalizuj">—</button>
+    <button class="wbtn" onclick="IAPI.maximize()" id="max-btn-title" title="Maksymalizuj"><svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    <button class="wbtn cl" onclick="IAPI.close()" id="close-btn-title" title="Zamknij">✕</button>
+  </div>
+</div>
+
+<div id="app">
+  <nav id="sb">
+    <button class="stoggle" onclick="toggleSB()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <button class="nitem act" id="nav-rentals" onclick="showV('rentals')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <span class="nlbl" id="nav-lbl-rentals">Aktywne</span>
+    </button>
+    <button class="nitem" id="nav-history" onclick="showV('history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      <span class="nlbl" id="nav-lbl-history">Historia</span>
+    </button>
+    <button class="nitem" id="nav-avail" onclick="showV('avail')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nlbl" id="nav-lbl-avail">Sprzęt</span>
+    </button>
+    <button class="nitem" id="nav-tasks" onclick="showV('tasks')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nlbl" id="nav-lbl-tasks">Zadania</span>
+    </button>
+    <button class="nitem" id="nav-stats" onclick="showV('stats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nlbl" id="nav-lbl-stats">Statystyki</span>
+    </button>
+    <div class="nspacer"></div>
+    <div class="nsep"></div>
+    <button class="nitem" id="nav-settings" onclick="showV('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span class="nlbl" id="nav-lbl-settings">Ustawienia</span>
+    </button>
+    <button class="nitem" id="nav-settings-user" onclick="showV('settings-user')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nlbl" id="nav-lbl-settings-user">Moje ustawienia</span>
+    </button>
+    <button class="nitem" onclick="logout()" style="color:var(--red)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span class="nlbl" id="nav-lbl-logout">Wyloguj</span>
+    </button>
+  </nav>
+
+  <div id="main">
+    <div id="topbar">
+      <h1 id="view-title">Aktywne wypożyczenia</h1>
+      <div id="fab-wrap" style="display:flex;flex-direction:row;align-items:center;gap:7px;flex:1;justify-content:center;padding:0 12px;"></div>
+      <div class="upill" onclick="logout()">
+        <div class="uav" id="top-av">?</div>
+        <span id="top-uname">—</span>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+
+  <!-- CENNIK PANEL -->
+  <div id="cp">
+    <div class="cp-hdr">
+      <div class="cp-hdr-brand"><span class="re">Re</span><span class="lax">lax</span> <span id="cp-brand-lbl" style="font-size:10px;font-weight:400;color:var(--t2)">Wypożyczalnia</span></div>
+      <span style="font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.35);border-radius:4px;padding:5px 16px;margin:0 auto" id="cp-title">CENNIK</span>
+      <button class="cp-x" onclick="toggleCP()">✕</button>
+    </div>
+    <div class="cp-inner">
+      <div class="cp-bd-orange" id="cp-karts-content">
+      </div>
+      <div class="cp-bd-dark">
+        <div id="cp-surcharge-content"></div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);text-align:center;font-size:9px;color:rgba(255,255,255,.4)"><span id="cp-footer-brand">Relax Wypożyczalnia</span></div>
+      </div>
+    </div>
+  </div>
+  <button class="cp-toggle" id="cp-btn" onclick="toggleCP()" id="cp-toggle-title" title="Cennik">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+</div>
+
+
+<!-- NEW RENTAL -->
+<div class="overlay" id="m-new">
+<div class="modal" style="width:560px">
+  <div class="mhdr"><h2 id="modal-new-title">Nowe wypożyczenie</h2><button class="mcls" onclick="closeM('m-new')">✕</button></div>
+  <div class="mbdy">
+    <div class="fr"><label id="lbl-fn-name">Imię i nazwisko / Numer telefonu *</label><input id="fn-name" id="fn-name-input" placeholder="Jan Kowalski lub 501 234 567"></div>
+    <div class="fg2">
+      <div class="fr"><label id="lbl-fn-doctype">Typ dokumentu</label><select id="fn-doctype"><option id="opt-dowod">Dowód osobisty</option><option>Prawo jazdy</option><option>Inne</option></select></div>
+      <div class="fr"><label id="lbl-fn-docnum">Numer dokumentu *</label><input id="fn-docnum" placeholder="ABC123456"></div>
+    </div>
+    <div class="vbuilder">
+      <div class="vbuilder-title"><span id="lbl-vbuilder">Wypożyczony sprzęt</span></div>
+      <div id="vehicles-list"></div>
+      <button class="add-vbtn" onclick="addVehicleRow()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="lbl-add-equip">Dodaj kolejny sprzęt</span>
+      </button>
+      <div id="total-price-lbl" style="text-align:center;font-family:var(--mono);font-size:22px;font-weight:800;color:var(--acc);margin-top:10px;min-height:28px"></div>
+    </div>
+    <div class="fr"><label id="lbl-fn-payment">Metoda płatności (opcjonalnie)</label>
+      <select id="fn-payment" onchange="onPaymentChange(this.value)" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none;cursor:pointer;transition:border-color .12s;">
+        <option id="opt-notchosen" value="">— nie wybrano —</option>
+        <option id="opt-cash" value="cash">Gotówka</option>
+        <option id="opt-card" value="card">Karta</option>
+      </select>
+    </div>
+    <div class="cash-sec" id="cash-sec" style="display:none">
+      <div class="fg2">
+        <div class="fr" style="margin-bottom:0"><label id="lbl-fn-cash">Gotówka od klienta (zł)</label><input type="number" id="fn-cash" placeholder="0.00" oninput="calcChange()"></div>
+        <div class="fr" style="margin-bottom:0"><label id="lbl-fn-change">Reszta</label><div class="pricebox" id="fn-change" style="font-size:16px">— zł</div></div>
+      </div>
+    </div>
+    <div class="fr"><label id="lbl-fn-notes">Uwagi</label><textarea id="fn-notes" placeholder="Opcjonalne..."></textarea></div>
+    <div class="factions">
+      <button class="btn btn-g" id="lbl-btn-cancel" onclick="closeM('m-new')">${t('tasksCancel')||'Anuluj'}</button>
+      <button class="btn btn-p" id="lbl-btn-create" onclick="addRental()">Utwórz wypożyczenie</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- EDIT -->
+<div class="overlay" id="m-edit">
+<div class="modal" style="width:540px"><div class="mhdr"><h2 id="modal-edit-title">Edytuj wypożyczenie</h2><button class="mcls" onclick="closeM('m-edit')">✕</button></div><div class="mbdy" id="edit-body"></div></div>
+</div>
+
+<!-- REPORT -->
+<div class="overlay" id="m-report">
+<div class="modal" style="width:520px"><div class="mhdr"><h2 id="modal-report-title">Raport dzienny</h2><button class="mcls" onclick="closeM('m-report')">✕</button></div><div class="mbdy" id="report-body"></div></div>
+</div>
+
+<!-- TRACKER -->
+<div class="overlay" id="m-tracker">
+<div class="modal" style="width:480px"><div class="mhdr"><h2 id="modal-tracker-title">Śledzenie pojazdów</h2><button class="mcls" onclick="closeM('m-tracker')">✕</button></div><div class="mbdy" id="tracker-body"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lbox">
+    <div class="ltitle"><span class="re">Re</span><span class="lax">lax</span></div>
+    <div class="lsub" id="login-sub">System Wypożyczalni — wybierz konto</div>
+    <div id="login-list"></div>
+    <!-- Password step (shown after selecting user) -->
+    <div id="login-pw-step" style="display:none">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--t2)"><span id="login-as-label">Zaloguj jako</span>: <span id="login-pw-name" style="color:var(--t1)"></span></div>
+      <div class="fr">
+        <label id="login-pw-label">Hasło</label>
+        <input type="password" id="login-pw-input" placeholder="Wpisz hasło..." style="background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:9px 12px;color:var(--t1);font-family:var(--font);font-size:14px;outline:none;width:100%" onkeydown="if(event.key==='Enter')confirmLogin()">
+        <div id="login-pw-err" style="color:var(--red);font-size:11px;margin-top:5px;min-height:16px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-g" id="login-back-btn" style="flex:0 0 auto" onclick="cancelLoginPw()">Wróć</button>
+        <button class="btn btn-p" id="login-submit-btn" onclick="confirmLogin()">Zaloguj</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Supported languages
+var LANGS={
+  pl:{
+    active:'Aktywne wypożyczenia',tasksNav:'Zadania',tasksList:'Lista zadań',tasksNone:'Brak zadań',tasksNew:'+ Nowe zadanie',tasksSave:'Zapisz zadanie',tasksCancel:'Anuluj',tasksTitle:'Tytuł *',tasksDate:'Data wystąpienia',tasksAssign:'Przypisz do',tasksAuthor:'Dodał',tasksDesc:'Opis',tasksAssignNone:'— nie przypisano —',tasksWorker:'Pracownik',tasksService:'Serwisant',tasksShortDesc:'Opis problemu w skrócie',tasksFullDesc:'Szczegółowy opis problemu...',tasksEditSave:'Zapisz zmiany',availAll:'Wszystkie',settingsNav:'Ustawienia',history:'Historia wypożyczeń',avail:'Stan sprzętu',
+    stats:'Statystyki',settings:'Ustawienia',logout:'Wyloguj',newRental:'Nowe wypożyczenie',
+    navActive:'Aktywne',navHistory:'Historia',navEquip:'Sprzęt',navStats:'Statystyki',
+    navSettings:'Ustawienia',navMySettings:'Moje ustawienia',navLogout:'Wyloguj',
+    cpGokarty:'GOKARTY',cpRowery:'ROWERY',cpDoplaty:'DOPŁATY',cpPoczasie:'GOKART — PO CZASIE',
+    cpRowerPoczasie:'ROWER — PO CZASIE',cpKazda:'KAŻDA NASTĘPNA GODZINA',
+    report:'Raport dzienny',tracker:'Śledzenie pojazdów',
+    slblActive:'Aktywne',slblWarn:'Ostrzeżenia',slblOver:'Przekroczone',slblSur:'Dopłaty łącznie',
+    allDay:'Cały dzień',colEquip:'Sprzęt',
+    colClient:'Klient',colTime:'Czas',colStartEnd:'Start / Koniec',colAmt:'Kwota',colSur:'Dopłata',colActs:'Akcje',
+    'cancel':'Anuluj','create':'Utwórz wypożyczenie','notes':'Uwagi','docType':'Typ dokumentu','payment':'Metoda płatności (opcjonalnie)','cash':'Gotówka','card':'Karta','notChosen':'— nie wybrano —','cashFrom':'Gotówka od klienta (zł)','change':'Reszta','optional':'Opcjonalne...','addEquip':'Dodaj kolejny sprzęt','total':'Łącznie','histEmpty':'Brak zakończonych wypożyczeń','activeEmpty':'Brak aktywnych wypożyczeń',
+    'equipLabel':'Wypożyczony sprzęt','typeLabel':'Typ','modelLabel':'Model','numLabel':'Nr pojazdu','timeLabel':'Czas','priceLabel':'Cena','totalLabel':'Łącznie','addMore':'Dodaj kolejny sprzęt','kartType':'Gokart','bikeType':'Rower','docId':'Dowód osobisty','docDl':'Prawo jazdy','docOther':'Inne','dur30':'30 min','dur60':'1 godz.','dur180':'3 godz.','durDay':'Cały dzień','reportDate':'piątek','reportRentals':'Wypożyczeń','reportKarts':'Gokarty','reportBikes':'Rowery','reportRevenue':'Przychód całkowity','reportBase':'Kwota bazowa','reportSur':'Dopłaty','availTotal':'Ogółem','availRented':'Wypożyczonych','availFree':'Dostępnych','availSearch':'Szukaj nr. pojazdu...','availFound':'Znaleziono','availFreeMsg':'jest dostępny','availNotFound':'Nie znaleziono pojazdu','editTitle':'Edytuj wypożyczenie','editName':'Imię / Telefon','editDoc':'Numer dokumentu','editStart':'Start — godzina','editEnd':'Koniec — godzina','editDur':'Czas wypożyczenia','editPrice':'Kwota łącznie (zł)','editNotes':'Uwagi','editVehicle':'Zmiana pojazdu','editModel':'Zmień model','editDiff':'Różnica w cenie','editSave':'Zapisz zmiany','editNoChange':'— bez zmiany —','mySettingsTitle':'Moje ustawienia','myAccount':'Moje konto','newPw':'Nowe hasło','repeatPw':'Powtórz hasło','savePw':'Zapisz nowe hasło','pwMin':'Min. 3 znaki','pwMismatch':'Hasła nie są identyczne','pwSaved':'Hasło zostało zmienione',
+    fabTracker:'Śledzenie pojazdów',fabReport:'Raport dzienny',fabNew:'Nowe wypożyczenie',
+    newRentalTitle:'Nowe wypożyczenie',modalName:'Imię i nazwisko / Numer telefonu *',modalDoc:'Numer dokumentu *'
+  ,
+    'statsMonth':'Miesiąc','statsRentals':'Wypożyczeń','statsRevenue':'Przychód','statsAvgDur':'Śr. czas','statsDailyRev':'Przychód dzienny (zł)','statsTopEquip':'Najpopularniejszy sprzęt','statsPeakHours':'Godziny szczytu','statsNoData':'Brak danych','bikeLabel':'Rower','numVehicleLabel':'Nr pojazdu *','totalPrice':'Łączna cena','phName':'Jan Kowalski lub 501 234 567','phDoc':'ABC123456','trackerSearch':'Filtruj wg kategorii','trackerReturn':'Powrót','trackerAvail':'jest dostępny','trackerNotFound':'Nie znaleziono pojazdu','trackerOverdue':'Dopłata','reportDateLabel':'Data','reportTitle':'Raport dzienny','loginChoose':'wybierz konto','loginAs':'Zaloguj jako','loginPwLabel':'Hasło','loginPwFirst':'Ustaw hasło (pierwsza rejestracja)','loginForgot':'Zapomniałem hasła','loginBack':'Wróć','loginBtn':'Zaloguj','cpTitle':'CENNIK','cpBrand':'Wypożyczalnia','docLabel':'Dowód','docLabelDl':'Prawo jazdy','docLabelOther':'Inne','noAccess':'Brak uprawnień do tej funkcji','loginSystem':'System Wypożyczalni — wybierz konto','loginAsLabel':'Zaloguj jako','trackerAll':'--- Wybierz pojazd ---','trackerKarts':'GOKARTY','trackerBikes':'ROWERY','monthNames':'Styczeń|Luty|Marzec|Kwiecień|Maj|Czerwiec|Lipiec|Sierpień|Wrzesień|Październik|Listopad|Grudzień','mySettingsNav':'Moje ustawienia','trackerFilter':'Filtruj według kategorii',
+    'ttEdit':'Edytuj','ttEnd':'Zakończ','ttDel':'Usuń','ttRestore':'Przywróć','ttTheme':'Tryb jasny/ciemny','ttMin':'Minimalizuj','ttMax':'Maksymalizuj','ttClose':'Zamknij','ttCennik':'Cennik','topBrand':'Wypożyczalnia','cpHour':'1 GODZINA','cpHours3':'3 GODZINY','cpTime':'CZAS','cpPrice':'CENA','cpMarka':'MARKA','cpDoplataLbl':'DOPŁATA','cp1h':'DO 1 GODZINY','cp3h':'DO 3 GODZIN','loginPwPlaceholder':'Wpisz hasło...','searchFound':'znaleziono','searchClient':'Klient','searchDoc':'Dokument','searchStart':'Start','searchReturn':'Planowany powrót','searchSurcharge':'Dopłata','fromLabel':'Od','toLabel':'Do','trackerRowery':'ROWERY','trackerGokarty':'GOKARTY','surPricePh':'zł/godz','gracePh':'Czas przekroczenia (min)','cpAfterMin':'PO {X} MIN','cpKartSection':'GOKART — PO CZASIE','cpBikeSection':'ROWER — PO CZASIE'
+  },
+  en:{
+    active:'Active Rentals',history:'Rental History',avail:'Equipment Status',
+    stats:'Statistics',settings:'Settings',logout:'Logout',newRental:'New Rental',
+    navActive:'Active',navHistory:'History',navEquip:'Equipment',navStats:'Statistics',
+    navSettings:'Settings',navMySettings:'My Settings',navLogout:'Logout',
+    cpGokarty:'GO-KARTS',cpRowery:'BIKES',cpDoplaty:'SURCHARGES',cpPoczas:'KART — OVERDUE',
+    cpRowerPoczas:'BIKE — OVERDUE',cpKazda:'EACH NEXT HOUR',
+    report:'Daily Report',tracker:'Vehicle Tracker',
+    slblActive:'Active',slblWarn:'Warnings',slblOver:'Exceeded',slblSur:'Surcharges total',
+    allDay:'All day',colEquip:'Equipment',
+    colClient:'Client',colTime:'Time',colStartEnd:'Start / End',colAmt:'Amount',colSur:'Surcharge',colActs:'Actions',
+    'cancel':'Cancel','create':'Create Rental','notes':'Notes','docType':'Document type','payment':'Payment method (optional)','cash':'Cash','card':'Card','notChosen':'— not selected —','cashFrom':'Cash from client (zł)','change':'Change','optional':'Optional...','addEquip':'Add more equipment','total':'Total','histEmpty':'No completed rentals','activeEmpty':'No active rentals',
+    'equipLabel':'Rented equipment','typeLabel':'Type','modelLabel':'Model','numLabel':'Vehicle no.','timeLabel':'Time','priceLabel':'Price','totalLabel':'Total','addMore':'Add more equipment','kartType':'Go-kart','bikeType':'Bike','docId':'ID card','docDl':'Driver license','docOther':'Other','dur30':'30 min','dur60':'1 hr','dur180':'3 hrs','durDay':'All day','reportRentals':'Rentals','reportKarts':'Go-karts','reportBikes':'Bikes','reportRevenue':'Total revenue','reportBase':'Base amount','reportSur':'Surcharges','availTotal':'Total','availRented':'Rented','availFree':'Available','availSearch':'Search vehicle no...','availFound':'Found','availFreeMsg':'is available','availNotFound':'Vehicle not found','editTitle':'Edit Rental','editName':'Name / Phone','editDoc':'Document number','editStart':'Start — time','editEnd':'End — time','editDur':'Rental duration','editPrice':'Total amount (zł)','editNotes':'Notes','editVehicle':'Change vehicle','editModel':'Change model','editDiff':'Price difference','editSave':'Save changes','editNoChange':'— no change —','mySettingsTitle':'My Settings','myAccount':'My account','newPw':'New password','repeatPw':'Repeat password','savePw':'Save new password','pwMin':'Min. 3 characters','pwMismatch':'Passwords do not match','pwSaved':'Password changed',
+    fabTracker:'Vehicle Tracker',fabReport:'Daily Report',fabNew:'New Rental',
+    newRentalTitle:'New Rental',modalName:'Name / Phone number *',modalDoc:'Document number *'
+  ,
+    'statsMonth':'Month','statsRentals':'Rentals','statsRevenue':'Revenue','statsAvgDur':'Avg. time','statsDailyRev':'Daily revenue (zł)','statsTopEquip':'Most popular equipment','statsPeakHours':'Peak hours','statsNoData':'No data','bikeLabel':'Bike','numVehicleLabel':'Vehicle no. *','totalPrice':'Total price','phName':'John Smith or +48 501 234 567','phDoc':'ABC123456','trackerSearch':'Filter by category','trackerReturn':'Return','trackerAvail':'is available','trackerNotFound':'Vehicle not found','trackerOverdue':'Surcharge','reportDateLabel':'Date','reportTitle':'Daily Report','loginChoose':'select account','loginAs':'Log in as','loginPwLabel':'Password','loginPwFirst':'Set password (first login)','loginForgot':'Forgot password','loginBack':'Back','loginBtn':'Log in','cpTitle':'PRICE LIST','cpBrand':'Rental','docLabel':'ID card','docLabelDl':'Driver license','docLabelOther':'Other','noAccess':'No permission for this function','loginSystem':'Rental System — select account','loginAsLabel':'Log in as','trackerAll':'--- Select vehicle ---','trackerKarts':'GO-KARTS','trackerBikes':'BIKES','monthNames':'January|February|March|April|May|June|July|August|September|October|November|December','mySettingsNav':'My Settings','trackerFilter':'Filter by category',
+    'ttEdit':'Edit','ttEnd':'End','ttDel':'Delete','ttRestore':'Restore','ttTheme':'Light/dark mode','ttMin':'Minimize','ttMax':'Maximize','ttClose':'Close','ttCennik':'Price list','topBrand':'Rental','cpHour':'1 HOUR','cpHours3':'3 HOURS','cpTime':'TIME','cpPrice':'PRICE','cpMarka':'BRAND','cpDoplataLbl':'SURCHARGE','cp1h':'UP TO 1 HOUR','cp3h':'UP TO 3 HOURS','loginPwPlaceholder':'Enter password...','searchFound':'found','searchClient':'Client','searchDoc':'Document','searchStart':'Start','searchReturn':'Planned return','searchSurcharge':'Surcharge','fromLabel':'From','toLabel':'To','trackerRowery':'BIKES','trackerGokarty':'GO-KARTS','surPricePh':'zł/hr','gracePh':'Grace period (min)','cpAfterMin':'AFTER {X} MIN','cpKartSection':'KART — OVERDUE','cpBikeSection':'BIKE — OVERDUE',
+    tasksNav:'Tasks',tasksList:'Task list',tasksNone:'No tasks',tasksNew:'+ New task',tasksSave:'Save task',tasksEditSave:'Save changes',tasksCancel:'Cancel',tasksTitle:'Title *',tasksDate:'Occurrence date',tasksAssign:'Assign to',tasksAuthor:'Added by',tasksDesc:'Description',tasksAssignNone:'— not assigned —',tasksWorker:'Worker',tasksService:'Service technician',tasksShortDesc:'Brief description of the issue',tasksFullDesc:'Detailed description of the problem...'
+  },
+  uk:{
+    active:'Активні прокати',history:'Історія прокатів',avail:'Стан обладнання',
+    stats:'Статистика',settings:'Налаштування',logout:'Вийти',newRental:'Новий прокат',
+    navActive:'Активні',navHistory:'Історія',navEquip:'Обладнання',navStats:'Статистика',
+    navSettings:'Налаштування',navMySettings:'Мої налаштування',navLogout:'Вийти',
+    cpGokarty:'КАРТИНГИ',cpRowery:'ВЕЛОСИПЕДИ',cpDoplaty:'ДОПЛАТИ',cpPoczas:'КАРТИНГ — ПОНАД ЧАС',
+    cpRowerPoczas:'ВЕЛОСИПЕД — ПОНАД ЧАС',cpKazda:'КОЖНА НАСТУПНА ГОДИНА',
+    report:'Денний звіт',tracker:'Відстеження транспорту',
+    slblActive:'Активні',slblWarn:'Попередження',slblOver:'Перевищено',slblSur:'Доплати разом',
+    allDay:'Весь день',colEquip:'Обладнання',
+    colClient:'Клієнт',colTime:'Час',colStartEnd:'Початок / Кінець',colAmt:'Сума',colSur:'Доплата',colActs:'Дії',
+    'cancel':'Скасувати','create':'Створити прокат','notes':'Примітки','docType':'Тип документа','payment':'Метод оплати (необовязково)','cash':'Готівка','card':'Картка','notChosen':'— не обрано —','cashFrom':'Готівка від клієнта (зл)','change':'Решта','optional':'Необовязково...','addEquip':'Додати обладнання','total':'Разом','histEmpty':'Немає завершених прокатів','activeEmpty':'Немає активних прокатів',
+    'equipLabel':'Орендоване обладнання','typeLabel':'Тип','modelLabel':'Модель','numLabel':'Номер тр-ба','timeLabel':'Час','priceLabel':'Ціна','totalLabel':'Разом','addMore':'Додати обладнання','kartType':'Картинг','bikeType':'Велосипед','docId':'Посвідчення особи','docDl':'Водійське посвідчення','docOther':'Інше','dur30':'30 хв','dur60':'1 год','dur180':'3 год','durDay':'Весь день','reportRentals':'Прокатів','reportKarts':'Картинги','reportBikes':'Велосипеди','reportRevenue':'Загальний дохід','reportBase':'Базова сума','reportSur':'Доплати','availTotal':'Всього','availRented':'Орендовано','availFree':'Доступно','availSearch':'Пошук номера тр-ба...','availFound':'Знайдено','availFreeMsg':'доступний','availNotFound':'Транспорт не знайдено','editTitle':'Редагувати прокат','editName':'Ім я / Телефон','editDoc':'Номер документа','editStart':'Початок — час','editEnd':'Кінець — час','editDur':'Тривалість прокату','editPrice':'Сума (зл)','editNotes':'Примітки','editVehicle':'Зміна транспорту','editModel':'Змінити модель','editDiff':'Різниця в ціні','editSave':'Зберегти зміни','editNoChange':'— без змін —','mySettingsTitle':'Мої налаштування','myAccount':'Мій обліковий запис','newPw':'Новий пароль','repeatPw':'Повторіть пароль','savePw':'Зберегти пароль','pwMin':'Мін. 3 символи','pwMismatch':'Паролі не збігаються','pwSaved':'Пароль змінено',
+    fabTracker:'Відстеження транспорту',fabReport:'Денний звіт',fabNew:'Новий прокат',
+    newRentalTitle:'Новий прокат',modalName:'Ім\'я та прізвище / Номер телефону *',modalDoc:'Номер документа *'
+  ,
+    'statsMonth':'Місяць','statsRentals':'Прокатів','statsRevenue':'Дохід','statsAvgDur':'Сер. час','statsDailyRev':'Денний дохід (зл)','statsTopEquip':'Найпопулярніше обладнання','statsPeakHours':'Години пік','statsNoData':'Немає даних','bikeLabel':'Велосипед','numVehicleLabel':'Номер тр-ба *','totalPrice':'Загальна ціна','phName':'Іван Петренко або +380 501 234 567','phDoc':'ABC123456','trackerSearch':'Фільтр за категорією','trackerReturn':'Повернення','trackerAvail':'доступний','trackerNotFound':'Транспорт не знайдено','trackerOverdue':'Доплата','reportDateLabel':'Дата','reportTitle':'Денний звіт','loginChoose':'оберіть обліковий запис','loginAs':'Увійти як','loginPwLabel':'Пароль','loginPwFirst':'Встановіть пароль (перший вхід)','loginForgot':'Забули пароль','loginBack':'Назад','loginBtn':'Увійти','cpTitle':'ПРЕЙСКУРАНТ','cpBrand':'Прокат','docLabel':'Посвідчення','docLabelDl':'Водійське посвідчення','docLabelOther':'Інше','noAccess':'Немає доступу до цієї функції','loginSystem':'Система прокату — оберіть обліковий запис','loginAsLabel':'Увійти як','trackerAll':'--- Оберіть транспорт ---','trackerKarts':'КАРТИНГИ','trackerBikes':'ВЕЛОСИПЕДИ','monthNames':'Січень|Лютий|Березень|Квітень|Травень|Червень|Липень|Серпень|Вересень|Жовтень|Листопад|Грудень','mySettingsNav':'Мої налаштування','trackerFilter':'Фільтр за категорією',
+    'ttEdit':'Редагувати','ttEnd':'Завершити','ttDel':'Видалити','ttRestore':'Відновити','ttTheme':'Світла/темна тема','ttMin':'Мінімізувати','ttMax':'Максимізувати','ttClose':'Закрити','ttCennik':'Прейскурант','topBrand':'Прокат','cpHour':'1 ГОДИНА','cpHours3':'3 ГОДИНИ','cpTime':'ЧАС','cpPrice':'ЦІНА','cpMarka':'МАРКА','cpDoplataLbl':'ДОПЛАТА','cp1h':'ДО 1 ГОДИНИ','cp3h':'ДО 3 ГОДИН','loginPwPlaceholder':'Введіть пароль...','searchFound':'знайдено','searchClient':'Клієнт','searchDoc':'Документ','searchStart':'Початок','searchReturn':'Плановане повернення','searchSurcharge':'Доплата','fromLabel':'Від','toLabel':'До','trackerRowery':'ВЕЛОСИПЕДИ','trackerGokarty':'КАРТИНГИ','surPricePh':'зл/год','gracePh':'Час толерантності (хв)','cpAfterMin':'ПІСЛЯ {X} ХВ','cpKartSection':'КАРТИНГ — ПОНАД ЧАС','cpBikeSection':'ВЕЛОСИПЕД — ПОНАД ЧАС',
+    tasksNav:'Задачі',tasksList:'Список задач',tasksNone:'Немає задач',tasksNew:'+ Нова задача',tasksSave:'Зберегти задачу',tasksEditSave:'Зберегти зміни',tasksCancel:'Скасувати',tasksTitle:'Назва *',tasksDate:'Дата виникнення',tasksAssign:'Призначити',tasksAuthor:'Додав',tasksDesc:'Опис',tasksAssignNone:'— не призначено —',tasksWorker:'Працівник',tasksService:'Сервісний технік',tasksShortDesc:'Короткий опис проблеми',tasksFullDesc:'Детальний опис проблеми...'
+  }
+};
+
+// ═══ CENNIK ═══
+let KARTS=[{name:'Maluch',p:{30:25,60:29}},{name:'Junior',p:{30:26,60:30}},{name:'Bolid',p:{30:28,60:32}},{name:'Relax',p:{30:29,60:34}},{name:'Duet',p:{30:30,60:36}},{name:'Family',p:{30:32,60:37}},{name:'Duo Race',p:{30:35,60:45}},{name:'Family Race',p:{30:37,60:47}}];
+let BIKES={60:29,180:49,1440:59};
+// SURCHARGE config: graceMin = minutes before surcharge starts, kartHour = per-hour kart rate,
+// bikeUpto1h/bikeUpto3h/bikePerHour = bike surcharge tiers
+let SURCHARGE={graceMin:20,kartHour:20,bikeUpto1h:29,bikeUpto3h:49,bikePerHour:29};
+const KART_DURS_BASE=[{v:30,k:'dur30',l:'30 min'},{v:60,k:'dur60',l:'1 godz.'}];
+const BIKE_DURS_BASE=[{v:60,k:'dur60',l:'1 godz.'},{v:180,k:'dur180',l:'3 godz.'},{v:1440,k:'durDay',l:'Cały dzień'}];
+// These fallback to PL — getKartDurs()/getBikeDurs() return translated versions
+const KART_DURS=KART_DURS_BASE;
+const BIKE_DURS=BIKE_DURS_BASE;
+// getLang/t() defined later — safe to call at render time, not at definition time
+function getKartDurs(){try{return KART_DURS_BASE.map(d=>({v:d.v,l:t(d.k)||d.l}));}catch(e){return KART_DURS_BASE;}}
+function getBikeDurs(){try{return BIKE_DURS_BASE.map(d=>({v:d.v,l:t(d.k)||d.l}));}catch(e){return BIKE_DURS_BASE;}}
+function loadPrices(){try{const s=localStorage.getItem('rl2_prices');if(s){const d=JSON.parse(s);if(d.KARTS)KARTS=d.KARTS;if(d.BIKES)BIKES=d.BIKES;if(d.SURCHARGE)SURCHARGE=d.SURCHARGE;}}catch(e){}}
+function savePrices(){try{localStorage.setItem('rl2_prices',JSON.stringify({KARTS,BIKES,SURCHARGE}));}catch(e){}}
+function renderCennikPanel(){
+  window._customSurRows='';
+  const el=document.getElementById('cp-karts-content');
+  const sel=document.getElementById('cp-surcharge-content');
+  if(!el)return;
+  const L=LANGS[getLang()]||LANGS.pl;
+  el.innerHTML=`
+    <div class="cp-sec">${L.cpGokarty||'GOKARTY'}</div>
+    <div class="cp-cols3"><div class="cp-ch l">${t('cpMarka')||'MARKA'}</div><div class="cp-ch">1/2h</div><div class="cp-ch">1h</div></div>
+    ${KARTS.map(k=>`<div class="cp-r3"><div class="cp-n">${k.name.toUpperCase()}</div><div class="cp-p">${k.p[30]}<span class="z">zł</span></div><div class="cp-p">${k.p[60]}<span class="z">zł</span></div></div>`).join('')}
+    <div class="cp-sec" style="margin-top:10px">${L.cpRowery||'ROWERY'}</div>
+    <div class="cp-cols2"><div class="cp-ch l">${t('cpTime')||'CZAS'}</div><div class="cp-ch">${t('cpPrice')||'CENA'}</div></div>
+    <div class="cp-r2"><div class="cp-n">${t('cpHour')||'1 GODZINA'}</div><div class="cp-p">${BIKES[60]}<span class="z">zł</span></div></div>
+    <div class="cp-r2"><div class="cp-n">${t('cpHours3')||'3 GODZINY'}</div><div class="cp-p">${BIKES[180]}<span class="z">zł</span></div></div>
+    <div class="cp-r2"><div class="cp-n">${t('allDay')||'CAŁY DZIEŃ'}</div><div class="cp-p">${BIKES[1440]}<span class="z">zł</span></div></div>
+    ${(()=>{
+      // Custom types from FLEET — shown BEFORE dopłaty
+      try{const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+      // Also add types from FLEET that have no prices
+      const fleetCustomTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+      const allTypes=[...new Set([...Object.keys(cp),...fleetCustomTypes])];
+      return allTypes.map(type=>{
+        const entries=cp[type]||[];
+        const fleetModels=[...new Set(FLEET.filter(f=>f.type===type).map(f=>f.model))];
+        const allEntries=entries.length?entries:fleetModels.map(m=>({name:m,p:{},durs:[]}));
+        if(!allEntries.length)return '';
+        // hasModel: model name differs from type name → gokarty style
+        // no model: model name === type name → rowery style
+        const hasModel=allEntries.some(e=>e.name.toLowerCase()!==type.toLowerCase());
+        const noModelStyle=!hasModel;
+        let typeRows='';
+        if(!hasModel){
+          // ROWERY style: CZAS | CENA, one row per period
+          const e=allEntries[0]||{durs:[],p:{}};
+          const rows=[];
+          if(e.durs&&e.durs.length)e.durs.filter(d=>d.p>0).forEach(d=>rows.push({l:d.v>=1440?'CAŁY DZIEŃ':d.v>=60?(d.v/60)+' GODZ.':d.v+' MIN',v:d.p}));
+          if(e.p&&e.p[30]>0&&!rows.find(r=>r.v===e.p[30]))rows.push({l:'1/2H',v:e.p[30]});
+          if(e.p&&e.p[60]>0&&!rows.find(r=>r.v===e.p[60]))rows.push({l:'1H',v:e.p[60]});
+          if(!rows.length)typeRows=`<div class="cp-cols2"><div class="cp-ch l">CZAS</div><div class="cp-ch">CENA</div></div><div class="cp-r2"><div class="cp-n" style="color:var(--t3)">—</div><div class="cp-p" style="color:var(--t3)">—</div></div>`;
+          else typeRows=`<div class="cp-cols2"><div class="cp-ch l">CZAS</div><div class="cp-ch">CENA</div></div>${rows.map(r=>`<div class="cp-r2"><div class="cp-n">${r.l}</div><div class="cp-p">${r.v}<span class="z">zł</span></div></div>`).join('')}`;
+        } else {
+          // GOKARTY style: MARKA as col header, each period as column header
+          const getRowsForEntry=(e)=>{
+            const rows=[];
+            if(e.durs&&e.durs.length)e.durs.filter(d=>d.p>0).forEach(d=>rows.push({v:d.v,l:d.v>=1440?'CAŁY DZIEŃ':d.v>=60?(d.v/60)+' GODZ.':d.v+' MIN',p:d.p}));
+            if(e.p&&e.p[30]>0)rows.push({v:30,l:'1/2H',p:e.p[30]});
+            if(e.p&&e.p[60]>0)rows.push({v:60,l:'1H',p:e.p[60]});
+            return rows;
+          };
+          const allEntryRows=allEntries.map(getRowsForEntry);
+          const allPeriods=[...new Map(allEntryRows.flat().map(r=>[r.v,r])).values()];
+          if(!allPeriods.length){typeRows=`<div class="cp-cols2"><div class="cp-ch l">MARKA</div><div class="cp-ch">CENA</div></div>${allEntries.map(e=>`<div class="cp-r2"><div class="cp-n">${e.name.toUpperCase()}</div><div class="cp-p" style="color:var(--t3)">—</div></div>`).join('')}`;}
+          if(allPeriods.length===1){
+            typeRows=`<div class="cp-cols2"><div class="cp-ch l">MARKA</div><div class="cp-ch">${allPeriods[0].l}</div></div>${allEntries.map((e,i)=>{const p=allEntryRows[i].find(r=>r.v===allPeriods[0].v)?.p||0;return p?`<div class="cp-r2"><div class="cp-n">${e.name.toUpperCase()}</div><div class="cp-p">${p}<span class="z">zł</span></div></div>`:'';}).join('')}`;
+          } else {
+            typeRows=`<div class="cp-cols3"><div class="cp-ch l">MARKA</div><div class="cp-ch">${allPeriods[0].l}</div><div class="cp-ch">${allPeriods[1].l}</div></div>${allEntries.map((e,i)=>{const er=allEntryRows[i];const p1=er.find(r=>r.v===allPeriods[0].v)?.p||0;const p2=er.find(r=>r.v===allPeriods[1].v)?.p||0;return(p1||p2)?`<div class="cp-r3"><div class="cp-n">${e.name.toUpperCase()}</div><div class="cp-p">${p1||'—'}${p1?'<span class="z">zł</span>':''}</div><div class="cp-p">${p2||'—'}${p2?'<span class="z">zł</span>':''}</div></div>`:'';}).join('')}`;
+          }
+        }
+        if(!typeRows)return '';
+        // Build surcharge rows for this type
+        let surRows='';
+        allEntries.forEach(e=>{
+          if(e.surcharges&&e.surcharges.length){
+            e.surcharges.filter(s=>s.perHour>0).forEach(s=>{
+              const lbl=noModelStyle?type.toUpperCase():e.name.toUpperCase();
+              surRows+=`<div class="cp-r2"><div class="cp-n">${lbl} PO ${s.graceMin} MIN</div><div class="cp-p">+${s.perHour}<span class="z">zł</span></div></div>`;
+            });
+          }
+        });
+        // Store surcharges for later rendering in DOPŁATY section
+        if(surRows)window._customSurRows=(window._customSurRows||'')+surRows;
+        return `<div class="cp-sec" style="margin-top:10px">${type.toUpperCase()}</div>${typeRows}`;
+      }).join('');}catch(e){return '';}
+    })()}
+    <div class="cp-sec" style="margin-top:10px">${L.cpDoplaty||'DOPŁATY'}</div>
+    <div class="cp-cols3"><div class="cp-ch l">${t('cpKartSection')||L.cpPoczasie||'GOKART — PO CZASIE'}</div><div class="cp-ch">20 MIN</div><div class="cp-ch">1H</div></div>
+    <div class="cp-r3"><div class="cp-n">${(t('cpAfterMin')||'PO {X} MIN').replace('{X}',SURCHARGE.graceMin)}</div><div class="cp-p">+${SURCHARGE.kartHour}<span class="z">zł</span></div><div class="cp-p">+${SURCHARGE.kartHour}<span class="z">zł</span></div></div>
+    <div class="cp-cols2" style="margin-top:6px;margin-bottom:3px"><div class="cp-ch l">${t('cpBikeSection')||L.cpRowerPoczasie||'ROWER — PO CZASIE'}</div><div class="cp-ch">${t('cpDoplataLbl')||'DOPŁATA'}</div></div>
+    <div class="cp-r2"><div class="cp-n">${t('cp1h')||'DO 1 GODZINY'}</div><div class="cp-p">+${SURCHARGE.bikeUpto1h}<span class="z">zł</span></div></div>
+    <div class="cp-r2"><div class="cp-n">${t('cp3h')||'DO 3 GODZIN'}</div><div class="cp-p">+${SURCHARGE.bikeUpto3h}<span class="z">zł</span></div></div>
+    <div class="cp-r2"><div class="cp-n">${L.cpKazda||'KAŻDA NASTĘPNA GODZINA'}</div><div class="cp-p">+${SURCHARGE.bikePerHour}<span class="z">zł</span></div></div>
+    ${(()=>{
+      // Render custom surcharges inside DOPŁATY section
+      try{
+        const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+        const fleetCustomTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+        const allTypes=[...new Set([...Object.keys(cp),...fleetCustomTypes])];
+        let out='';
+        allTypes.forEach(type=>{
+          const entries=cp[type]||[];
+          entries.forEach(e=>{
+            if(!e.surcharges||!e.surcharges.length)return;
+            const validSur=e.surcharges.filter(s=>s.perHour>0);
+            if(!validSur.length)return;
+            const hasModel=e.name.toLowerCase()!==type.toLowerCase();
+            const hdrLabel=hasModel?`${e.name.toUpperCase()} — PO CZASIE`:`${type.toUpperCase()} — PO CZASIE`;
+            out+=`<div class="cp-cols2" style="margin-top:6px;margin-bottom:3px"><div class="cp-ch l">${hdrLabel}</div><div class="cp-ch">DOPŁATA</div></div>`;
+            validSur.forEach(s=>{
+              const graceLbl=s.graceMin?`PO ${s.graceMin} MIN`:'KAŻDA GODZ.';
+              out+=`<div class="cp-r2"><div class="cp-n">${graceLbl}</div><div class="cp-p">+${s.perHour}<span class="z">zł</span></div></div>`;
+            });
+          });
+        });
+        return out;
+      }catch(e){return '';}
+    })()}
+  `;
+  if(sel)sel.innerHTML='';
+}
+loadPrices();
+
+// ═══ IPC — FIXED: no || fallback for arrays ═══
+const IAPI = (() => {
+  const E = typeof window.electronAPI !== 'undefined' ? window.electronAPI : null;
+
+  // Sync localStorage helpers (always kept in sync as fallback)
+  const ls  = (k, d) => { try { const s = localStorage.getItem(k); if (s === null) return d; const p = JSON.parse(s); return (Array.isArray(p) ? p.length > 0 : p != null) ? p : d; } catch { return d; } };
+  const lss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+
+  return {
+    _l:    (k, d) => ls(k, d),
+    _s:    (k, v) => { if (E) E.kvSet(k, JSON.stringify(v)); lss(k, v); },
+    _lGet: (k, d) => ls(k, d),
+    _kvSet:(k, v) => { if (E) E.kvSet(k, JSON.stringify(v)); lss(k, v); },
+
+    async getData() {
+      if (E) {
+        const d = await E.getData();
+        // Sync kv keys from SQLite → localStorage so sync reads still work
+        const kvKeys = ['rl2_prices','rl2_fleet','rl2_custom_prices','rl2_tasks','rl2_theme','rl2_report_categories','rl2_pdf_fields'];
+        await Promise.all(kvKeys.map(async k => {
+          const v = await E.kvGet(k);
+          if (v !== null) try { localStorage.setItem(k, v); } catch(e) {}
+        }));
+        return { rentals: d.rentals || [], users: d.users || null, sessions: d.sessions || [] };
+      }
+      return { rentals: ls('rl2_r', []), users: ls('rl2_u', null), sessions: ls('rl2_sessions', []) };
+    },
+
+    saveRentals(r)  { if (E) E.saveRentals(JSON.stringify(r));  lss('rl2_r', r); },
+    saveUsers(u)    { if (E) E.saveUsers(JSON.stringify(u));     lss('rl2_u', u); },
+    saveSessions(s) { if (E) E.saveSessions(JSON.stringify(s));  lss('rl2_sessions', s); },
+
+    minimize() { if (E) E.minimize(); },
+    maximize() { if (E) E.maximize(); },
+    close()    { if (E) E.close();    },
+  };
+})();
+
+// ═══ STATE ═══
+let rentals=[],users=[],sessions=[],currentUser=null,currentView='rentals',sbExp=false,ticker=null,payMode=null,cpOpen=false;
+let pendingLoginUserId=null;
+
+async function init(){
+  try{
+    const d=await IAPI.getData();
+    rentals=Array.isArray(d.rentals)?d.rentals:[];
+    users=Array.isArray(d.users)&&d.users.length>0?d.users:[{id:'admin',name:'Admin',role:'admin'},{id:'u1',name:'Pracownik 1',role:'user'}];
+    sessions=Array.isArray(d.sessions)?d.sessions:[];
+  }catch(e){
+    rentals=[];
+    users=[{id:'admin',name:'Admin',role:'admin'},{id:'u1',name:'Pracownik 1',role:'user'}];
+    sessions=[];
+  }
+  // Clean stale custom types that have no FLEET vehicles
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    let changed=false;
+    for(const type of Object.keys(cp)){
+      if(!FLEET.some(f=>f.type===type)){delete cp[type];changed=true;}
+    }
+    if(changed)localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
+  }catch(e){}
+  renderLogin();
+  renderCennikPanel();
+}
+
+// ═══ UTILS ═══
+const p2=n=>String(n).padStart(2,'0');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const initials=n=>n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const fmtHM=ts=>{const d=new Date(ts);return p2(d.getHours())+':'+p2(d.getMinutes());};
+const fmtDate=ts=>{const d=new Date(ts);return p2(d.getDate())+'.'+p2(d.getMonth()+1);};
+function durLabel(vtype,dur){
+  if(vtype==='gokart')return getKartDurs().find(d=>d.v==dur)?.l||fmtDur(dur);
+  if(vtype==='rower')return getBikeDurs().find(d=>d.v==dur)?.l||fmtDur(dur);
+  // Custom type - look in custom durs
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entries=cp[vtype]||[];
+    for(const e of entries){
+      if(e.durs&&e.durs.length){const d=e.durs.find(d=>d.v==dur);if(d)return fmtDur(d.v);}
+    }
+  }catch(e2){}
+  return fmtDur(dur);
+}
+function fmtDur(mins){
+  mins=parseInt(mins)||0;
+  if(mins>=1440)return 'Cały dzień';
+  if(mins>=60)return (mins/60)%1===0?(mins/60)+' godz.':mins+' min';
+  return mins+' min';
+}
+
+// ═══ DOPŁATA — po 20min, za godzinę po godzinie ═══
+function calcSurcharge(r,now){
+  if(!r.active)return r.finalSurcharge||0;
+  const endTs=r.startTs+r.duration*60000;
+  const overMs=now-endTs;
+  if(overMs<=0)return 0;
+  return r.vehicles.reduce((s,v)=>s+vSur(v,overMs),0);
+}
+function vSur(v,overMs){
+  const overMin=overMs/60000;
+  if(overMin<SURCHARGE.graceMin)return 0;
+  if(v.vtype==='gokart'){
+    const periods=Math.ceil(overMin/60);
+    return periods*SURCHARGE.kartHour;
+  } else {
+    if(overMin<=60)return SURCHARGE.bikeUpto1h;
+    if(overMin<=180)return SURCHARGE.bikeUpto3h;
+    return SURCHARGE.bikeUpto3h+Math.ceil((overMin-180)/60)*SURCHARGE.bikePerHour;
+  }
+}
+
+function getStatus(r,now){
+  if(!r.active)return 'done';
+  const endTs=r.startTs+r.duration*60000;
+  const overMin=(now-endTs)/60000;
+  if(overMin>=15)return 'over';
+  if(overMin>=10)return 'warn';
+  return 'ok';
+}
+
+// ═══ THEME ═══
+function toggleTheme(){
+document.body.offsetHeight;const h=document.documentElement;const n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('rl2_theme',n);}catch(e){}}
+(function(){try{const t=localStorage.getItem('rl2_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();
+
+// ═══ CLOCK ═══
+function tickClock(){const d=new Date();const el=document.getElementById('tb-clock');if(el)el.textContent=p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());}
+setInterval(tickClock,1000);tickClock();
+
+// ═══ CENNIK PANEL ═══
+function toggleCP(){
+  const cp=document.getElementById('cp');
+  const btn=document.getElementById('cp-btn');
+  if(cpOpen){
+    // closing — instant, no animation
+    cp.classList.add('no-transition');
+    btn.classList.add('no-transition');
+    cpOpen=false;
+    cp.classList.remove('open');
+    btn.classList.remove('open');
+    document.body.classList.remove('cp-open');
+        document.body.classList.remove('sb-cp');
+    requestAnimationFrame(()=>{cp.classList.remove('no-transition');btn.classList.remove('no-transition');});
+  } else {
+    // opening — smooth
+    cpOpen=true;
+    cp.classList.remove('no-transition');
+    btn.classList.remove('no-transition');
+    cp.classList.add('open');
+    btn.classList.add('open');
+    document.body.classList.add('cp-open');
+        document.body.classList.toggle('sb-cp',sbExp);
+  }
+}
+
+// ═══ LOGIN ═══
+function renderLogin(){
+  const ll=document.getElementById('login-list');
+  if(!ll)return;
+  document.getElementById('login-pw-step').style.display='none';
+  ll.style.display='block';
+  ll.innerHTML=users.map(u=>`
+    <div class="uopt" onclick="startLogin('${u.id}')">
+      <div class="uav${u.role==='admin'?' adm':''}" style="width:36px;height:36px;font-size:11px">${initials(u.name)}</div>
+      <div><div class="uopt-name">${u.name}</div><div class="uopt-role">${u.role==='admin'?'Administrator':'Pracownik'}</div></div>
+    </div>`).join('');
+}
+function startLogin(id){
+  // Apply user's language before showing password step
+  const uLang=users.find(x=>x.id===id)?.lang||'pl';
+  const tl=(key)=>LANGS[uLang]?.[key]||LANGS.pl[key]||key;
+  const u=users.find(x=>x.id===id);if(!u)return;
+  pendingLoginUserId=id;
+  document.getElementById('login-list').style.display='none';
+  const pwStep=document.getElementById('login-pw-step');
+  pwStep.style.display='block';
+  const loginAsEl=document.getElementById('login-as-label');if(loginAsEl)loginAsEl.textContent=tl('loginAsLabel')||'Zaloguj jako';
+  const pwInp=document.getElementById('login-pw-input');if(pwInp)pwInp.placeholder=tl('loginPwPlaceholder')||'Wpisz hasło...';
+  document.getElementById('login-pw-name').textContent=u.name;
+  // Hide subtitle when showing pw step
+  const subEl=document.getElementById('login-sub');if(subEl)subEl.style.display='none';
+  const inp=document.getElementById('login-pw-input');
+  inp.value='';
+  document.getElementById('login-pw-err').textContent='';
+  document.getElementById('login-pw-label').textContent=u.passwordHash?tl('loginPwLabel'):tl('loginPwFirst');
+  const backBtn=document.getElementById('login-back-btn');if(backBtn)backBtn.textContent=tl('loginBack');
+  const loginBtn=document.getElementById('login-submit-btn');if(loginBtn)loginBtn.textContent=tl('loginBtn');
+  const forgotBtn=document.getElementById('login-forgot-btn');if(forgotBtn)forgotBtn.textContent=tl('loginForgot');
+  setTimeout(()=>inp.focus(),50);
+}
+function cancelLoginPw(){
+  pendingLoginUserId=null;
+  window._pwResetMode=false;
+  document.getElementById('login-pw-step').style.display='none';
+  document.getElementById('login-list').style.display='block';
+  const subEl=document.getElementById('login-sub');if(subEl)subEl.style.display='';
+}
+function hashPw(pw){
+  // Simple hash (djb2) - not crypto-secure but works offline without libs
+  let h=5381;for(let i=0;i<pw.length;i++)h=((h<<5)+h)+pw.charCodeAt(i)&0xffffffff;
+  return h.toString(16);
+}
+function forgotPassword(){
+  const pwStep=document.getElementById('login-pw-step');
+  // Swap to master password entry inline
+  const errEl=document.getElementById('login-pw-err');
+  const inp=document.getElementById('login-pw-input');
+  const lbl=document.getElementById('login-pw-label');
+  lbl.textContent='Hasło główne (wpisz "relax"):';
+  inp.value='';
+  errEl.textContent='Wpisz hasło główne "relax" i kliknij Zaloguj — to pozwoli ustawić nowe hasło.';
+  errEl.style.color='var(--t2)';
+  // Override confirmLogin to handle master password reset flow
+  window._pwResetMode=true;
+}
+// Patch confirmLogin to handle reset mode
+const _origConfirmLogin=confirmLogin;
+function confirmLogin(){
+  if(window._pwResetMode){
+    const pw=document.getElementById('login-pw-input').value;
+    const err=document.getElementById('login-pw-err');
+    if(pw!=='relax'){err.textContent='Błędne hasło główne.';err.style.color='var(--red)';return;}
+    // Ask new password
+    const newPw=window.prompt('Nowe hasło (min. 3 znaki):');
+    if(!newPw||newPw.length<3){err.textContent='Hasło za krótkie.';err.style.color='var(--red)';return;}
+    const u=users.find(x=>x.id===pendingLoginUserId);if(!u)return;
+    u.passwordHash=hashPw(newPw);
+    IAPI.saveUsers(users);
+    window._pwResetMode=false;
+    err.textContent='Hasło zmienione! Zaloguj się nowym hasłem.';
+    err.style.color='var(--green)';
+    document.getElementById('login-pw-label').textContent='Hasło';
+    document.getElementById('login-pw-input').value='';
+    return;
+  }
+  const u=users.find(x=>x.id===pendingLoginUserId);if(!u)return;
+  const pw=document.getElementById('login-pw-input').value;
+  const err=document.getElementById('login-pw-err');
+  err.style.color='var(--red)';
+  if(!u.passwordHash){
+    if(pw.length<3){err.textContent='Hasło musi mieć min. 3 znaki.';return;}
+    u.passwordHash=hashPw(pw);
+    IAPI.saveUsers(users);
+    err.textContent='';
+  } else {
+    if(hashPw(pw)!==u.passwordHash){err.textContent='Błędne hasło.';return;}
+    err.textContent='';
+  }
+  doLogin(u);
+}
+function applyLang(){
+  const L=LANGS[getLang()]||LANGS.pl;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('nav-lbl-rentals',L.navActive);set('nav-lbl-history',L.navHistory);
+  set('nav-lbl-avail',L.navEquip);set('nav-lbl-stats',L.navStats);
+  set('nav-lbl-settings',L.navSettings);set('nav-lbl-settings-user',L.navMySettings);
+  set('nav-lbl-logout',L.navLogout);
+  set('cp-title',L.cpTitle||'CENNIK');
+  set('cp-brand-lbl',L.cpBrand||'Wypożyczalnia');
+  set('cp-footer-brand','Relax '+(L.cpBrand||'Wypożyczalnia'));
+  set('top-brand',L.topBrand||L.cpBrand||'Wypożyczalnia');
+  // Update static title attributes
+  const setT=(id,v)=>{const el=document.getElementById(id);if(el)el.title=v;};
+  setT('theme-btn',L.ttTheme||'Tryb jasny/ciemny');
+  setT('min-btn-title',L.ttMin||'Minimalizuj');
+  setT('max-btn-title',L.ttMax||'Maksymalizuj');
+  setT('close-btn-title',L.ttClose||'Zamknij');
+  setT('cp-toggle-title',L.ttCennik||'Cennik');
+  renderCennikPanel();
+}
+function doLogin(u){
+  currentUser=u;
+  const ses={id:uid(),userId:u.id,userName:u.name,loginTs:Date.now(),logoutTs:null};
+  sessions.push(ses);
+  currentUser._sessionId=ses.id;
+  IAPI.saveSessions(sessions);
+  document.getElementById('top-uname').textContent=currentUser.name;
+  const av=document.getElementById('top-av');
+  av.textContent=initials(currentUser.name);
+  av.className='uav'+(currentUser.role==='admin'?' adm':'');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('nav-settings').style.display=currentUser.role==='admin'?'':'none';
+  document.getElementById('nav-settings-user').style.display=currentUser.role==='admin'?'none':'';
+  applyLang();
+  ticker=setInterval(()=>{if(currentView==='rentals')renderRentals();},20000);
+  showV('rentals');
+}
+function login(id){const u=users.find(x=>x.id===id);if(u)doLogin(u);}
+function logout(){
+  if(currentUser&&currentUser._sessionId){
+    const ses=sessions.find(s=>s.id===currentUser._sessionId);
+    if(ses)ses.logoutTs=Date.now();
+    IAPI.saveSessions(sessions);
+  }
+  currentUser=null;pendingLoginUserId=null;
+  clearInterval(ticker);
+  document.getElementById('login-screen').style.display='flex';
+  renderLogin();
+}
+function toggleSB(){sbExp=!sbExp;document.getElementById('sb').classList.toggle('exp',sbExp);document.body.classList.toggle('sb-cp',cpOpen&&sbExp);}
+function openChangePw(){
+  if(!currentUser)return;
+  const newPw=prompt('Nowe hasło (min. 3 znaki):');
+  if(!newPw||newPw.length<3){alert('Hasło za krótkie.');return;}
+  const u=users.find(x=>x.id===currentUser.id);
+  if(!u)return;
+  u.passwordHash=hashPw(newPw);
+  IAPI.saveUsers(users);
+  alert('Hasło zostało zmienione.');
+}
+
+// ═══ VIEWS ═══
+function getLang(){return (currentUser?.lang)||'pl';}
+function t(key){return LANGS[getLang()]?.[key]||LANGS.pl[key]||key;}
+
+function showV(v){
+  // Permission checks
+  if(v==='history'&&!hasPerm('viewHistory')){showNoAccess();return;}
+  if(v==='stats'&&!hasPerm('viewReport')){showNoAccess();return;}
+  currentView=v;
+  document.querySelectorAll('.nitem').forEach(el=>el.classList.remove('act'));
+  const nav=document.getElementById('nav-'+v);if(nav)nav.classList.add('act');
+  const titles={
+    rentals:t('active'),history:t('history'),avail:t('avail'),
+    stats:t('stats'),settings:t('settings'),
+    'settings-prices':'Edycja cen','settings-equipment':'Zarządzanie sprzętem',
+    'settings-user':t('mySettingsNav')||'Moje ustawienia','tasks':t('tasksNav')||'Zadania'
+  };
+  document.getElementById('view-title').textContent=titles[v]||'';
+  renderFAB(v);
+  if(v==='rentals')renderRentals();
+  else if(v==='history')renderHistory();
+  else if(v==='avail')renderAvail();
+  else if(v==='stats')renderStats();
+  else if(v==='settings')renderSettings();
+  else if(v==='settings-prices')renderSettingsPrices();
+  else if(v==='settings-equipment')renderSettingsEquipment();
+  else if(v==='settings-user')renderSettingsUser();
+  else if(v==='tasks')renderTasks();
+}
+function showNoAccess(){
+  document.getElementById('content').innerHTML=`<div class="empty"><p style="color:var(--red)">${t('noAccess')||'Brak uprawnień do tej funkcji.'}</p></div>`;
+}
+
+function hasPerm(key){
+  if(!currentUser)return false;
+  if(currentUser.role==='admin')return true;
+  const perms=currentUser.perms||DEFAULT_PERMS;
+  return perms[key]!==false;
+}
+
+function renderFAB(v){
+  const fw=document.getElementById('fab-wrap');fw.innerHTML='';
+  if(v==='rentals'){
+    let html='';
+    if(hasPerm('addRental'))html+=`<button class="fab fab-p" onclick="openNewRental()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>${t('fabNew')||'Nowe wypożyczenie'}</button>`;
+    if(hasPerm('viewTracker'))html+=`<button class="fab fab-s" onclick="openTracker()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${t('fabTracker')||'Śledzenie pojazdów'}</button>`;
+    if(hasPerm('viewReport'))html+=`<button class="fab fab-s" onclick="openReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${t('fabReport')||'Raport dzienny'}</button>`;
+    fw.innerHTML=html;
+  }
+}
+
+// ═══ AVAIL ═══
+let FLEET=(()=>{
+  const f=[];
+  KARTS.forEach(k=>{
+    for(let j=1;j<=2;j++) f.push({type:'gokart',model:k.name,num:`K-${String(j).padStart(2,'0')}`});
+  });
+  for(let i=1;i<=5;i++) f.push({type:'rower',model:'Rower',num:`R-${String(i).padStart(2,'0')}`});
+  return f;
+})();
+function getCustomTypes(){
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const fleetTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+    return [...new Set([...Object.keys(cp),...fleetTypes])];
+  }catch(e){return [];}
+}
+function getCustomDurs(type,model){
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entry=(cp[type]||[]).find(e=>e.name.toLowerCase()===model.toLowerCase());
+    if(entry){
+      // Use explicit durs if set
+      if(entry.durs&&entry.durs.length){
+        return entry.durs.filter(d=>d.v>0).map(d=>({v:d.v,l:d.v>=1440?'Cały dzień':d.v>=60?(d.v/60)+' godz.':d.v+' min',p:d.p}));
+      }
+      // Build from p{30,60} fields
+      const durs=[];
+      if(entry.p&&entry.p[30]>0)durs.push({v:30,l:'30 min',p:entry.p[30]});
+      if(entry.p&&entry.p[60]>0)durs.push({v:60,l:'1 godz.',p:entry.p[60]});
+      if(durs.length)return durs;
+    }
+    return getKartDurs();
+  }catch(e){return getKartDurs();}
+}
+function getCustomModelOpts(type,selectedModel){
+  try{
+    // Always use FLEET as source of truth for models
+    const fleetModels=[...new Set(FLEET.filter(f=>f.type===type).map(f=>f.model))];
+    if(fleetModels.length)return fleetModels.map(m=>`<option value="${m}"${m===selectedModel?' selected':''}>${m}</option>`).join('');
+    // Fallback to custom prices entries
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    return (cp[type]||[]).map(e=>`<option value="${e.name}"${e.name===selectedModel?' selected':''}>${e.name}</option>`).join('');
+  }catch(e){return '';}
+}
+function getCustomPrice(type,model,dur){
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entry=(cp[type]||[]).find(e=>e.name.toLowerCase()===model.toLowerCase());
+    if(!entry)return 0;
+    // Check durs array first
+    if(entry.durs&&entry.durs.length){
+      const d=entry.durs.find(d=>d.v==dur);
+      if(d)return d.p||0;
+    }
+    return entry.p?entry.p[dur]||0:0;
+  }catch(e){return 0;}
+}
+function loadFleet(){try{const s=localStorage.getItem('rl2_fleet');if(s){const d=JSON.parse(s);if(Array.isArray(d)&&d.length>0)FLEET=d;}}catch(e){}}
+function saveFleet(){try{localStorage.setItem('rl2_fleet',JSON.stringify(FLEET));}catch(e){}}
+loadFleet();
+function getRentedNums(){return rentals.filter(r=>r.active).flatMap(r=>r.vehicles.map(v=>v.vnum));}
+// Extract trailing number from vnum: "K-01"->1, "K-1"->1, "1"->1, "R-03"->3
+function extractNum(n){const m=String(n).match(/(\d+)\s*$/);return m?parseInt(m[1],10):null;}
+// Match: fleet vehicle (with model) vs rented num string + model type
+function isFleetVehicleRented(fleetV, rentedVehicles){
+  const fn=extractNum(fleetV.num);
+  if(fn===null) return false;
+  return rentedVehicles.some(rv=>{
+    // model must match too
+    if(rv.vtype===fleetV.type && rv.vmodel===fleetV.model){
+      const rn=extractNum(rv.vnum);
+      return rn===fn;
+    }
+    return false;
+  });
+}
+
+// ═══ MODALS ═══
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+
+</script>
+<script src="pages/rentals.js"></script>
+<script src="pages/history.js"></script>
+<script src="pages/equipment.js"></script>
+<script src="pages/tasks.js"></script>
+<script src="pages/statistics.js"></script>
+<script src="pages/settings.js"></script>
+<script src="pages/report.js"></script>
+<script>
+setInterval(()=>{if(currentView==='rentals'&&currentUser)renderRentals();},20000);
+init();
+</script>
+</body>
+</html>
+
+<style>
+.lang-btn{
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+}
+</style>
