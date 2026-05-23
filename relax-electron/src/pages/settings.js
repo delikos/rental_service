@@ -69,7 +69,7 @@ function renderSettings(){
                   <button id="lang-btn-${u.id}-uk" onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
                 </div>
               </div>
-              <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">${t('settAdminPw')||'Zmień hasło administratora'}</div>
+              <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:8px">${t('settChangeAdminPw')||'Zmień hasło'}</div>
               <div style="max-width:360px">
                 <div class="fr" style="margin-bottom:8px"><label>${t('settNewPw')||'Nowe hasło'}</label><input type="password" id="adm-pw1" placeholder="${t('pwMin')||'Min. 3 znaki'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
                 <div class="fr" style="margin-bottom:8px"><label>${t('settRepeatPw')||'Powtórz hasło'}</label><input type="password" id="adm-pw2" placeholder="${t('settRepeatPw')||'Powtórz'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
@@ -104,7 +104,7 @@ function renderSettings(){
           <div style="font-size:11px;color:var(--t2);margin-bottom:10px">${t('settRepCatLbl')||'Kategorie pojazdów w raporcie:'}</div>
           ${(()=>{
             let cats;try{const raw=localStorage.getItem('rl2_report_categories');cats=raw?JSON.parse(raw):null;}catch(e){cats=null;}
-            const allTypes=[{type:'gokart',label:'Gokarty'},{type:'rower',label:'Rowery'},...getCustomTypes().filter(x=>x!=='gokart'&&x!=='rower').map(tp=>({type:tp,label:tp.charAt(0).toUpperCase()+tp.slice(1)}))];
+            const allTypes=[{type:'gokart',label:t('settKarts')||'Gokarty'},{type:'rower',label:t('settBikes')||'Rowery'},...getCustomTypes().filter(x=>x!=='gokart'&&x!=='rower').map(tp=>({type:tp,label:tp.charAt(0).toUpperCase()+tp.slice(1)}))];
             if(!cats)cats=[...allTypes];
             return allTypes.map(at=>{const checked=cats.some(c=>c.type===at.type);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:8px"><input type="checkbox" ${checked?'checked':''} onchange="toggleReportCat('${at.type}','${at.label}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${at.label}</span></label>`;}).join('')+`<div style="font-size:10px;color:var(--t3);margin-top:4px">${t('settRepAutoSave')||'Zmiany są zapisywane automatycznie.'}</div>`;
           })()}
@@ -302,7 +302,7 @@ function showUserSessions(uid){
     }).join('');
     return `<div style="margin-bottom:6px">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="font-size:10px;font-weight:700;color:var(--acc);cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:6px">
-        <span>📅 ${day}</span><span style="color:var(--t3);font-weight:400">(${daySes.length} sesji)</span>
+        <span>📅 ${day}</span><span style="color:var(--t3);font-weight:400">(${daySes.length} ${t('settSessions')||'sesji'})</span>
       </div>
       <div style="display:none;padding:0 4px">${rows}</div>
     </div>`;
@@ -326,11 +326,11 @@ function renderSettingsEquipment(){
       <div class="fg3" style="margin-bottom:8px">
         <div class="fr" style="margin-bottom:0">
           <label>${t('settEquipTypeLbl')||'Typ pojazdu'}</label>
-          <input id="eq-type" placeholder="np. Gokart, Rower, Motorower..." oninput="eqCheckNewType()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
+          <input id="eq-type" placeholder="${t('settEquipTypePh')||'np. Gokart, Rower...'}" oninput="eqCheckNewType()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
         </div>
         <div class="fr" style="margin-bottom:0">
           <label>${t('settEquipModelLbl')||'Model / Nazwa'}</label>
-          <input id="eq-model" placeholder="np. Maluch, Kajak..." oninput="eqCheckNewType();const p=document.getElementById('eq-model-preview');if(p)p.textContent=this.value||'—';" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
+          <input id="eq-model" placeholder="${t('settEquipModelPh')||'np. Maluch, Kajak...'}" oninput="eqCheckNewType();const p=document.getElementById('eq-model-preview');if(p)p.textContent=this.value||'—';" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
         </div>
         <div class="fr" style="margin-bottom:0">
           <label>${t('settEquipNumLbl')||'Numer'}</label>
@@ -353,15 +353,7 @@ function renderSettingsEquipment(){
           <div style="display:grid;grid-template-columns:1fr 100px 64px 26px;gap:4px;padding:5px 8px;background:var(--s3);align-items:center;border-top:1px solid var(--bd)">
             <div id="eq-model-preview" style="font-size:11px;font-weight:700;color:var(--t1)">—</div>
             <select id="eq-dur30-sel" onchange="checkDupDurs()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:3px;padding:3px 4px;font-family:var(--mono);font-size:11px;color:var(--t1);outline:none;cursor:pointer">
-              <option value="30">30 min</option>
-              <option value="60">1 godz.</option>
-              <option value="90">90 min</option>
-              <option value="120">2 godz.</option>
-              <option value="180">3 godz.</option>
-              <option value="240">4 godz.</option>
-              <option value="360">6 godz.</option>
-              <option value="720">12 godz.</option>
-              <option value="1440">Cały dzień</option>
+              ${(()=>{const h=t('durHour')||'godz.';const d=t('allDay')||'Cały dzień';return `<option value="30">30 min</option><option value="60">1 ${h}</option><option value="90">90 min</option><option value="120">2 ${h}</option><option value="180">3 ${h}</option><option value="240">4 ${h}</option><option value="360">6 ${h}</option><option value="720">12 ${h}</option><option value="1440">${d}</option>`;})()}
             </select>
             <div style="display:flex;align-items:center;gap:3px">
               <input type="number" id="eq-price30" placeholder="—" min="0" style="width:48px;background:var(--s2);border:1px solid var(--bd);border-radius:3px;padding:3px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--t1);text-align:center;outline:none">
@@ -387,7 +379,7 @@ function renderSettingsEquipment(){
             <button type="button" onclick="addEqSurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">${t('settEquipAddSurTier')||'+ Dodaj próg dopłaty'}</button>
           </div>
         </div>
-        <div style="font-size:10px;color:var(--t3);margin-top:5px">Zostaw puste jeśli nie chcesz teraz.</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:5px">${t('settEquipPriceHint')||'Zostaw puste jeśli nie chcesz teraz.'}</div>
       </div>
       <div id="eq-error" style="color:var(--red);font-size:11px;min-height:16px;margin-bottom:6px"></div>
       <button class="btn btn-p" onclick="addFleetVehicle()" style="width:auto;padding:0 16px;height:30px;font-size:11px">${t('settEquipAddVehicle')||'Dodaj pojazd'}</button>
@@ -402,7 +394,7 @@ function renderSettingsEquipment(){
             <span style="color:var(--t3);font-size:14px;flex-shrink:0">⠿</span>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600">${v.model}</div>
-              <div style="font-size:10px;color:var(--t2)">${v.type} · nr ${v.num.replace(/^[A-Z]+-0*/,'')}</div>
+              <div style="font-size:10px;color:var(--t2)">${v.type==='gokart'?(t('kartType')||'Gokart'):v.type==='rower'?(t('bikeType')||'Rower'):v.type.charAt(0).toUpperCase()+v.type.slice(1)} · nr ${v.num.replace(/^[A-Z]+-0*/,'')}</div>
             </div>
             <button onclick="removeFleetVehicle(${i})" style="width:26px;height:26px;border-radius:5px;border:1px solid rgba(232,64,64,.25);background:rgba(232,64,64,.08);color:var(--red);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Usuń">✕</button>
           </div>`).join('')}
@@ -449,7 +441,8 @@ function checkDupDurs(){
 }
 function addEqDurRow(){
   const list=document.getElementById('eq-extra-durs');if(!list)return;
-  const presets=[[30,'30 min'],[60,'1 godz.'],[90,'90 min'],[120,'2 godz.'],[180,'3 godz.'],[240,'4 godz.'],[360,'6 godz.'],[720,'12 godz.'],[1440,'Cały dzień']];
+  const _h=t('durHour')||'godz.';const _d=t('allDay')||'Cały dzień';
+  const presets=[[30,'30 min'],[60,`1 ${_h}`],[90,'90 min'],[120,`2 ${_h}`],[180,`3 ${_h}`],[240,`4 ${_h}`],[360,`6 ${_h}`],[720,`12 ${_h}`],[1440,_d]];
   const selOpts=presets.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
   const row=document.createElement('div');
   row.className='eq-dur-row';
@@ -644,14 +637,13 @@ function renderSettingsPrices(){
         ${hdr(colsCss)}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div>${allDurVals.map(v=>`<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${durLabels[v]||v+'m'}</div>`).join('')}</div>
         ${entries.map((e,ei)=>row(colsCss,`${lbl(e.name.toUpperCase())}${allDurVals.map(dv=>{const d=(e.durs||[]).find(x=>x.v===dv);return cell(`ctp-${type}-${ei}-${dv}`,d?d.p:0,'zł');}).join('')}`)  ).join('')}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">${t('settSaveKarts')||'Zapisz'} ${typeLabel}</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">${t('settSave')||'Zapisz'} ${typeLabel}</button>
     </div>`;
   }).join('');
 
   // ── Custom type surcharge rows for unified dopłaty section ──
-  const _surMarka=t('cpMarka')||'MARKA';
-  const _surGrace=t('settSurGrace')||'PO MIN';
-  const _surDoplata=t('cpDoplataLbl')||'DOPŁATA';
+  const _surGraceHdr=t('settSurGrace')||'PO MIN';
+  const _surDoplataHdr=t('cpDoplataLbl')||'DOPŁATA';
   const customSurRows=customTypes.map(type=>{
     const entries=cp[type]||[];
     const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
@@ -659,12 +651,17 @@ function renderSettingsPrices(){
     const hasSur=entries.some(e=>e.surcharges&&e.surcharges.length);
     if(!hasSur)return '';
     return `${subHdr(typeLabel)}
-      <div style="background:var(--s2);margin:0 0 4px">
-        ${hdr('1fr 68px 68px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${_surMarka}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surGrace}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplata}</div></div>
+      <div style="padding:0 10px 8px">
         ${entries.map((e,ei)=>{
-          const s=(e.surcharges||[])[0];
-          if(!s)return row('1fr 68px 68px',`${lbl(e.name.toUpperCase())}<div style="font-size:10px;color:var(--t3);text-align:center;grid-column:2/4">—</div>`);
-          return row('1fr 68px 68px',`${lbl(e.name.toUpperCase())}${cell('ctsur-'+type+'-'+ei+'-grace-0',s.graceMin||0,'min')}${cell('ctsur-'+type+'-'+ei+'-ph-0',s.perHour||0,'zł','1')}`);
+          const surs=e.surcharges||[];
+          if(!surs.length)return `<div style="margin-bottom:6px;font-size:10px;color:var(--t3)">${e.name}</div>`;
+          return `<div style="margin-bottom:10px">
+            <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
+            <div style="background:var(--s2);border-radius:3px;overflow:hidden">
+              ${hdr('1fr 68px 68px')}<div></div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surGraceHdr}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplataHdr}</div></div>
+              ${surs.map((s,si)=>row('1fr 68px 68px',`<div style="font-size:10px;color:var(--t3)">${si===0?t('settSurGrace')||'Czas':'+'}</div>${cell('ctsur-'+type+'-'+ei+'-grace-'+si,s.graceMin||0,'min')}${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
+            </div>
+          </div>`;
         }).join('')}
       </div>`;
   }).join('');
@@ -813,10 +810,24 @@ async function exportAllData(){
     const json=JSON.stringify(backup,null,2);
     const today=new Date();
     const ds=`${p2(today.getDate())}_${p2(today.getMonth()+1)}_${today.getFullYear()}`;
+    const pw=prompt(t('backupPwPrompt')||'Hasło administratora (puste = eksport bez szyfrowania):');
+    if(pw===null)return; // user cancelled
     const a=document.createElement('a');
-    a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
-    a.download=`relax_backup_${ds}.json`;
-    document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),500);
+    if(pw.length>0){
+      const adminUser=users.find(u=>u.role==='admin');
+      if(!adminUser||!(await verifyPw(pw,adminUser.passwordHash))){
+        if(msg){msg.textContent=t('backupPwWrong')||'Błędne hasło — eksport anulowany.';msg.style.color='var(--red)';}
+        return;
+      }
+      const encrypted=await _rlxEncrypt(json,pw);
+      const blob=new Blob([encrypted],{type:'application/octet-stream'});
+      a.href=URL.createObjectURL(blob);
+      a.download=`relax_backup_${ds}.rlx`;
+    } else {
+      a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
+      a.download=`relax_backup_${ds}.json`;
+    }
+    document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);if(a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);},500);
     if(msg){msg.textContent=t('settExportOk')||'✓ Eksport gotowy';msg.style.color='var(--green)';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
   }catch(e){if(msg){msg.textContent='Błąd eksportu: '+e.message;msg.style.color='var(--red)';}}
 }
@@ -824,12 +835,23 @@ async function exportAllData(){
 function importAllData(){
   const msg=document.getElementById('backup-msg');
   const inp=document.createElement('input');
-  inp.type='file';inp.accept='.json';
+  inp.type='file';inp.accept='.json,.rlx';
   inp.onchange=async function(ev){
     const file=ev.target.files[0];if(!file)return;
     try{
-      const text=await file.text();
-      const data=JSON.parse(text);
+      let data;
+      if(file.name.endsWith('.rlx')){
+        const buf=await file.arrayBuffer();
+        const bytes=new Uint8Array(buf);
+        const pw=prompt(t('backupDecryptPw')||'Hasło do odszyfrowania:');
+        if(pw===null)return;
+        const plain=await _rlxDecrypt(bytes,pw);
+        if(!plain){if(msg){msg.textContent=t('backupDecryptFailed')||'Błędne hasło lub uszkodzony plik.';msg.style.color='var(--red)';}return;}
+        data=JSON.parse(plain);
+      } else {
+        const text=await file.text();
+        data=JSON.parse(text);
+      }
       if(!data||!data.version){if(msg){msg.textContent='Nieprawidłowy plik kopii zapasowej.';msg.style.color='var(--red)';}return;}
       if(!confirm('Czy na pewno chcesz przywrócić dane? Obecne dane zostaną zastąpione przez dane z pliku!'))return;
       if(msg){msg.textContent='Importowanie...';msg.style.color='var(--t2)';}

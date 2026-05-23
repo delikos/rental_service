@@ -5,6 +5,7 @@ const crypto = require('crypto');
 
 const userDataPath = app.getPath('userData');
 const dbPath       = path.join(userDataPath, 'relax.db');
+const backupDir    = path.join(userDataPath, 'backups');
 let db, SQL;
 
 // ── Init DB ──────────────────────────────────────────────────────
@@ -35,6 +36,24 @@ function flush() {
 function exec(sql, params) {
   const res = db.exec(sql, params);
   return res.length ? res[0].values : [];
+}
+
+// ── Auto backup (max 5 files) ─────────────────────────────────────
+function createAutoBackup() {
+  try {
+    if (!db || !fs.existsSync(dbPath)) return;
+    flush();
+    fs.mkdirSync(backupDir, { recursive: true });
+    const now = new Date();
+    const p = n => String(n).padStart(2, '0');
+    const ts = `${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+    fs.copyFileSync(dbPath, path.join(backupDir, `backup_${ts}.db`));
+    const files = fs.readdirSync(backupDir)
+      .filter(f => f.startsWith('backup_') && f.endsWith('.db'))
+      .sort();
+    files.slice(0, Math.max(0, files.length - 5))
+      .forEach(f => { try { fs.unlinkSync(path.join(backupDir, f)); } catch(_) {} });
+  } catch(e) { console.error('Auto backup error:', e); }
 }
 
 // ── IPC handlers ─────────────────────────────────────────────────
@@ -83,28 +102,36 @@ ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
   });
   if (canceled || !filePath) return false;
 
-  const tmpPath = path.join(app.getPath('temp'), `relax_pdf_${Date.now()}.html`);
-  const hidden = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+  // Use base64 data URL — avoids temp-file path/encoding issues on Windows
+  const hidden = new BrowserWindow({
+    show: false,
+    width: 794, height: 1123,
+    webPreferences: { nodeIntegration: false, contextIsolation: true }
+  });
   try {
-    fs.writeFileSync(tmpPath, htmlContent, 'utf8');
-    await hidden.loadFile(tmpPath);
+    const b64 = Buffer.from(htmlContent, 'utf8').toString('base64');
+    await hidden.loadURL(`data:text/html;base64,${b64}`);
     await new Promise(resolve => hidden.webContents.once('did-finish-load', resolve));
-    await new Promise(resolve => setTimeout(resolve, 600));
-    const pdfData = await hidden.webContents.printToPDF({ printBackground: true, pageSize: 'A4' });
-    hidden.close();
-    try { fs.unlinkSync(tmpPath); } catch(_) {}
-    fs.writeFileSync(filePath, Buffer.isBuffer(pdfData) ? pdfData : Buffer.from(pdfData));
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const pdfData = await hidden.webContents.printToPDF({
+      printBackground: true,
+      pageSize: 'A4',
+    });
+    hidden.destroy();
+    const buf = Buffer.isBuffer(pdfData) ? pdfData : Buffer.from(pdfData);
+    if (!buf || buf.length < 100) throw new Error('PDF generation returned empty data');
+    fs.writeFileSync(filePath, buf);
     return true;
   } catch(e) {
-    try { hidden.close(); } catch(_) {}
-    try { fs.unlinkSync(tmpPath); } catch(_) {}
+    try { hidden.destroy(); } catch(_) {}
+    console.error('PDF error:', e);
     throw e;
   }
 });
 
 ipcMain.handle('win:focus', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
-  if (win) { win.show(); win.focus(); }
+  if (win && !win.isDestroyed()) { win.show(); win.focus(); }
 });
 
 ipcMain.handle('auth:hashPw', (_, pw) => {
@@ -143,6 +170,10 @@ function createWindow() {
     },
   });
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
+  // Restore OS focus after every page load (fixes freeze after window.location.reload())
+  win.webContents.on('did-finish-load', () => {
+    if (!win.isDestroyed()) win.focus();
+  });
   Menu.setApplicationMenu(null);
 }
 
@@ -151,4 +182,5 @@ app.whenReady().then(async () => {
   createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
+app.on('before-quit', createAutoBackup);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

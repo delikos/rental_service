@@ -498,7 +498,16 @@ var LANGS={
     pdfFieldRentals:'Ilość wypożyczeń',pdfFieldPerEquip:'Wypożyczenia według sprzętu',pdfFieldRevenue:'Łączny przychód',
     pdfFieldSurcharge:'Łączne dopłaty',pdfFieldTopModel:'Najczęściej wypożyczany model',
     pdfFieldAvgDur:'Średni czas wypożyczenia',pdfFieldPeakHour:'Godzina szczytu',
-    lockoutMsg:'Konto zablokowane. Spróbuj ponownie za {M} minut.'
+    lockoutMsg:'Konto zablokowane. Spróbuj ponownie za {M} minut.',
+    loginPwWrong:'Błędne hasło.',loginAttemptsLeft:'({N} prób pozostało)',
+    settSave:'Zapisz',settNoPrices:'brak cen',settEquipNoPricesHint:'Dodaj pojazdy z cenami w',
+    settEquipTypePh:'np. Gokart, Rower, Motorower...',settEquipModelPh:'np. Maluch, Kajak...',
+    settEquipPriceHint:'Zostaw puste jeśli nie chcesz teraz.',
+    settChangeAdminPw:'Zmień hasło',durHour:'godz.',settSessions:'sesji',
+    backupPwPrompt:'Hasło administratora (puste = eksport bez szyfrowania):',
+    backupPwWrong:'Błędne hasło — eksport anulowany.',
+    backupDecryptPw:'Hasło do odszyfrowania:',
+    backupDecryptFailed:'Błędne hasło lub uszkodzony plik.'
   },
   en:{
     active:'Active Rentals',history:'Rental History',avail:'Equipment Status',
@@ -534,7 +543,16 @@ var LANGS={
     pdfFieldRentals:'Number of rentals',pdfFieldPerEquip:'Rentals by equipment',pdfFieldRevenue:'Total revenue',
     pdfFieldSurcharge:'Total surcharges',pdfFieldTopModel:'Most rented model',
     pdfFieldAvgDur:'Average rental duration',pdfFieldPeakHour:'Peak hour',
-    lockoutMsg:'Account locked. Try again in {M} minutes.'
+    lockoutMsg:'Account locked. Try again in {M} minutes.',
+    loginPwWrong:'Wrong password.',loginAttemptsLeft:'({N} attempts left)',
+    settSave:'Save',settNoPrices:'no prices',settEquipNoPricesHint:'Add vehicles with prices in',
+    settEquipTypePh:'e.g. Go-kart, Bike...',settEquipModelPh:'e.g. Maluch, Kayak...',
+    settEquipPriceHint:'Leave empty if you don\'t want to set now.',
+    settChangeAdminPw:'Change password',durHour:'hr',settSessions:'sessions',
+    backupPwPrompt:'Admin password (empty = export without encryption):',
+    backupPwWrong:'Wrong password — export cancelled.',
+    backupDecryptPw:'Password to decrypt:',
+    backupDecryptFailed:'Wrong password or corrupted file.'
   },
   uk:{
     active:'Активні прокати',history:'Історія прокатів',avail:'Стан обладнання',
@@ -570,7 +588,16 @@ var LANGS={
     pdfFieldRentals:'Кількість оренд',pdfFieldPerEquip:'Оренди за обладнанням',pdfFieldRevenue:'Загальний дохід',
     pdfFieldSurcharge:'Загальні доплати',pdfFieldTopModel:'Найпопулярніша модель',
     pdfFieldAvgDur:'Середній час оренди',pdfFieldPeakHour:'Пікова година',
-    lockoutMsg:'Обліковий запис заблоковано. Спробуйте за {M} хвилин.'
+    lockoutMsg:'Обліковий запис заблоковано. Спробуйте за {M} хвилин.',
+    loginPwWrong:'Невірний пароль.',loginAttemptsLeft:'({N} спроб залишилось)',
+    settSave:'Зберегти',settNoPrices:'немає цін',settEquipNoPricesHint:'Додайте транспорт з цінами у',
+    settEquipTypePh:'напр. Картинг, Велосипед...',settEquipModelPh:'напр. Малюк, Каяк...',
+    settEquipPriceHint:'Залиште порожнім, якщо не хочете зараз.',
+    settChangeAdminPw:'Змінити пароль',durHour:'год.',settSessions:'сеансів',
+    backupPwPrompt:'Пароль адміністратора (порожньо = без шифрування):',
+    backupPwWrong:'Невірний пароль — експорт скасовано.',
+    backupDecryptPw:'Пароль для розшифрування:',
+    backupDecryptFailed:'Невірний пароль або пошкоджений файл.'
   }
 };
 
@@ -783,6 +810,27 @@ async function init(){
   renderCennikPanel();
 }
 
+// ═══ BACKUP ENCRYPTION (AES-256-GCM via SubtleCrypto) ═══
+async function _rlxEncrypt(json, password){
+  const enc=new TextEncoder();
+  const keyMat=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['encrypt']);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(json));
+  const out=new Uint8Array(32+ct.byteLength);
+  out.set([0x52,0x4C,0x58,0x02]);out.set(salt,4);out.set(iv,20);out.set(new Uint8Array(ct),32);
+  return out;
+}
+async function _rlxDecrypt(bytes, password){
+  if(bytes[0]!==0x52||bytes[1]!==0x4C||bytes[2]!==0x58||bytes[3]!==0x02)return null;
+  const enc=new TextEncoder();
+  const keyMat=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes.slice(4,20),iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['decrypt']);
+  try{const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(20,32)},key,bytes.slice(32));return new TextDecoder().decode(plain);}
+  catch{return null;}
+}
+
 // ═══ UTILS ═══
 const p2=n=>String(n).padStart(2,'0');
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -993,7 +1041,8 @@ async function confirmLogin(){
       if(f.lockedUntil>Date.now()){
         err.textContent=(t('lockoutMsg')||'Konto zablokowane. Spróbuj za {M} minut.').replace('{M}','10');
       } else {
-        err.textContent=(t('loginPwWrong')||'Błędne hasło.')+' ('+(5-f.count)+' prób pozostało)';
+        const attLeft=5-f.count;
+        err.textContent=(t('loginPwWrong')||'Błędne hasło.')+' '+(t('loginAttemptsLeft')||'({N} prób pozostało)').replace('{N}',attLeft);
       }
       return;
     }

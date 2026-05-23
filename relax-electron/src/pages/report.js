@@ -86,15 +86,21 @@ async function exportReportPDF(){
   if(typeof window.electronAPI!=='undefined'&&window.electronAPI.savePDF){
     const btn=document.getElementById('pdf-export-btn');
     const origText=btn?btn.innerHTML:'';
+    const origBg=btn?btn.style.background:'';
     if(btn){btn.innerHTML='⏳ PDF';btn.style.opacity='.6';btn.style.pointerEvents='none';}
     try{
       const ok=await window.electronAPI.savePDF(html,`relax_raport_${pdfDate}.pdf`);
-      if(btn){btn.innerHTML='✓ PDF';btn.style.background='var(--green)';btn.style.opacity='1';btn.style.pointerEvents='';}
-      setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background='var(--acc)';}},2000);
+      if(ok){
+        if(btn){btn.innerHTML='✓ PDF';btn.style.background='var(--green)';}
+        setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background=origBg||'var(--acc)';}},2000);
+      }
+      // ok===false means user cancelled — just restore button below via finally
     }catch(err){
-      if(btn){btn.innerHTML='✕ Błąd';btn.style.background='var(--red)';btn.style.opacity='1';btn.style.pointerEvents='';}
-      setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background='var(--acc)';}},3000);
+      if(btn){btn.innerHTML='✕ Błąd';btn.style.background='var(--red)';}
+      setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background=origBg||'var(--acc)';}},3000);
       console.error('PDF error:',err);
+    }finally{
+      if(btn){btn.style.opacity='1';btn.style.pointerEvents='';}
     }
   } else {
     const iframe=document.createElement('iframe');
