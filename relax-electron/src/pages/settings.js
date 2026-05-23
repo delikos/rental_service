@@ -70,12 +70,12 @@ function renderSettings(){
                 </div>
               </div>
               <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">${t('settAdminPw')||'Zmień hasło administratora'}</div>
-              <div class="fg2">
+              <div style="max-width:360px">
                 <div class="fr" style="margin-bottom:8px"><label>${t('settNewPw')||'Nowe hasło'}</label><input type="password" id="adm-pw1" placeholder="${t('pwMin')||'Min. 3 znaki'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
                 <div class="fr" style="margin-bottom:8px"><label>${t('settRepeatPw')||'Powtórz hasło'}</label><input type="password" id="adm-pw2" placeholder="${t('settRepeatPw')||'Powtórz'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
+                <div id="adm-pw-msg" style="font-size:11px;min-height:14px;margin-bottom:6px"></div>
+                <button class="btn btn-p" onclick="saveAdminPw()" style="width:auto;padding:0 14px;height:30px;font-size:11px">${t('settSavePw')||'Zapisz hasło'}</button>
               </div>
-              <div id="adm-pw-msg" style="font-size:11px;min-height:14px;margin-bottom:6px"></div>
-              <button class="btn btn-p" onclick="saveAdminPw()" style="width:auto;padding:0 14px;height:30px;font-size:11px">${t('settSavePw')||'Zapisz hasło'}</button>
             </div>`:''}
           </div>
         </div>`;
@@ -111,7 +111,7 @@ function renderSettings(){
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
             <div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">${t('settRepFieldsLbl')||'Dane w raporcie PDF:'}</div>
             ${(()=>{
-              const pdfFields=[{k:'pdf_rentals',l:'Ilość wypożyczeń'},{k:'pdf_per_equip',l:'Wypożyczenia według sprzętu'},{k:'pdf_revenue',l:'Łączny przychód'},{k:'pdf_surcharge',l:'Łączne dopłaty'},{k:'pdf_top_model',l:'Najczęściej wypożyczany model'},{k:'pdf_avg_dur',l:'Średni czas wypożyczenia'},{k:'pdf_peak_hour',l:'Godzina szczytu'}];
+              const pdfFields=[{k:'pdf_rentals',l:t('pdfFieldRentals')||'Ilość wypożyczeń'},{k:'pdf_per_equip',l:t('pdfFieldPerEquip')||'Wypożyczenia według sprzętu'},{k:'pdf_revenue',l:t('pdfFieldRevenue')||'Łączny przychód'},{k:'pdf_surcharge',l:t('pdfFieldSurcharge')||'Łączne dopłaty'},{k:'pdf_top_model',l:t('pdfFieldTopModel')||'Najczęściej wypożyczany model'},{k:'pdf_avg_dur',l:t('pdfFieldAvgDur')||'Średni czas wypożyczenia'},{k:'pdf_peak_hour',l:t('pdfFieldPeakHour')||'Godzina szczytu'}];
               let saved;try{const r=localStorage.getItem('rl2_pdf_fields');saved=r?JSON.parse(r):null;}catch(e){saved=null;}
               if(!saved)saved=pdfFields.map(f=>f.k);
               return pdfFields.map(f=>{const checked=saved.includes(f.k);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:7px"><input type="checkbox" ${checked?'checked':''} onchange="togglePdfField('${f.k}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${f.l}</span></label>`;}).join('');
@@ -155,7 +155,19 @@ function toggleUserCard(uid){
   el.style.display=open?'none':'block';
   if(btn)btn.textContent=open?'▼':'▲';
 }
-function saveAdminPw(){
+function rerenderSettingsKeepState(){
+  if(currentView!=='settings')return;
+  // Save which cards are open
+  const openIds=users.map(u=>u.id).filter(id=>{const el=document.getElementById('ucard-'+id);return el&&el.style.display!=='none';});
+  renderSettings();
+  // Restore open state
+  openIds.forEach(id=>{
+    const el=document.getElementById('ucard-'+id);
+    const btn=document.getElementById('ucard-btn-'+id);
+    if(el){el.style.display='block';if(btn)btn.textContent='▲';}
+  });
+}
+async function saveAdminPw(){
   const p1=document.getElementById('adm-pw1')?.value;
   const p2=document.getElementById('adm-pw2')?.value;
   const msg=document.getElementById('adm-pw-msg');
@@ -163,9 +175,9 @@ function saveAdminPw(){
   if(p1!==p2){msg.textContent=t('pwMismatch')||'Hasła nie są identyczne.';msg.style.color='var(--red)';return;}
   const u=users.find(x=>x.id===currentUser.id);
   if(!u)return;
-  u.passwordHash=hashPw(p1);
+  u.passwordHash=await hashPw(p1);
   IAPI.saveUsers(users);
-  msg.textContent='✓ Hasło administratora zmienione.';msg.style.color='var(--green)';
+  msg.textContent='✓ '+(t('settAdminPw')||'Hasło administratora zmienione.');msg.style.color='var(--green)';
   document.getElementById('adm-pw1').value='';
   document.getElementById('adm-pw2').value='';
 }
@@ -222,15 +234,15 @@ function renderSettingsUser(){
     </div>
     `
 }
-function saveUserPw(){
+async function saveUserPw(){
   const p1=document.getElementById('usr-pw1')?.value;
   const p2=document.getElementById('usr-pw2')?.value;
   const msg=document.getElementById('usr-pw-msg');
-  if(!p1||p1.length<3){msg.textContent='Hasło musi mieć min. 3 znaki.';msg.style.color='var(--red)';return;}
-  if(p1!==p2){msg.textContent='Hasła nie są identyczne.';msg.style.color='var(--red)';return;}
+  if(!p1||p1.length<3){msg.textContent=t('pwMin')||'Hasło musi mieć min. 3 znaki.';msg.style.color='var(--red)';return;}
+  if(p1!==p2){msg.textContent=t('pwMismatch')||'Hasła nie są identyczne.';msg.style.color='var(--red)';return;}
   const u=users.find(x=>x.id===currentUser.id);
   if(!u)return;
-  u.passwordHash=hashPw(p1);
+  u.passwordHash=await hashPw(p1);
   IAPI.saveUsers(users);
   msg.textContent='✓ '+(t('pwSaved')||'Hasło zostało zmienione.');msg.style.color='var(--green)';
   document.getElementById('usr-pw1').value='';
@@ -304,24 +316,24 @@ function renderSettingsEquipment(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <button onclick="showV('settings')" style="height:32px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Powrót
+        ${t('settPricesBack')||'Powrót'}
       </button>
-      <h2 style="font-size:15px;font-weight:700">Zarządzanie sprzętem</h2>
+      <h2 style="font-size:15px;font-weight:700">${t('settEquipTitle')||'Zarządzanie sprzętem'}</h2>
     </div>
 
     <div class="sett-card">
-      <h3>Dodaj nowy pojazd</h3>
+      <h3>${t('settEquipAddNew')||'Dodaj nowy pojazd'}</h3>
       <div class="fg3" style="margin-bottom:8px">
         <div class="fr" style="margin-bottom:0">
-          <label>Typ pojazdu</label>
+          <label>${t('settEquipTypeLbl')||'Typ pojazdu'}</label>
           <input id="eq-type" placeholder="np. Gokart, Rower, Motorower..." oninput="eqCheckNewType()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
         </div>
         <div class="fr" style="margin-bottom:0">
-          <label>Model / Nazwa</label>
+          <label>${t('settEquipModelLbl')||'Model / Nazwa'}</label>
           <input id="eq-model" placeholder="np. Maluch, Kajak..." oninput="eqCheckNewType();const p=document.getElementById('eq-model-preview');if(p)p.textContent=this.value||'—';" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
         </div>
         <div class="fr" style="margin-bottom:0">
-          <label>Numer</label>
+          <label>${t('settEquipNumLbl')||'Numer'}</label>
           <input id="eq-num" placeholder="np. 1, 2, 3..." style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
         </div>
       </div>
@@ -329,12 +341,12 @@ function renderSettingsEquipment(){
       <div id="eq-price-section" style="display:none;margin-bottom:8px">
         <!-- Prices section - cennik style -->
         <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden;margin-bottom:8px">
-          <div style="background:#1a1a1a;padding:5px 8px;font-size:10px;font-weight:800;color:#fff;text-align:center;letter-spacing:.06em;text-transform:uppercase">CENY</div>
+          <div style="background:#1a1a1a;padding:5px 8px;font-size:10px;font-weight:800;color:#fff;text-align:center;letter-spacing:.06em;text-transform:uppercase">${t('settEquipPricesHdr')||'CENY'}</div>
           <!-- Column header row: MARKA | OKRES | CENA -->
           <div style="display:grid;grid-template-columns:1fr 100px 64px 26px;gap:4px;background:#1a1a1a;padding:4px 8px;border-top:1px solid rgba(255,255,255,.1)">
-            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div>
-            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">OKRES</div>
-            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div>
+            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div>
+            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${t('settEquipPeriodHdr')||'OKRES'}</div>
+            <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${t('cpPrice')||'CENA'}</div>
             <div></div>
           </div>
           <!-- Default row: first period -->
@@ -359,12 +371,12 @@ function renderSettingsEquipment(){
           </div>
           <div id="eq-extra-durs"></div>
           <div style="background:#1a1a1a;padding:4px 8px;display:flex;align-items:center;justify-content:flex-end">
-            <button type="button" onclick="addEqDurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">+ Dodaj okres</button>
+            <button type="button" onclick="addEqDurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">${t('settEquipAddPeriod')||'+ Dodaj okres'}</button>
           </div>
         </div>
         <!-- Surcharges section -->
         <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-          <div style="background:#191919;padding:5px 8px;font-size:10px;font-weight:800;color:#fff;text-align:center;letter-spacing:.06em;text-transform:uppercase;border-top:2px solid #c96a10">DOPŁATY</div>
+          <div style="background:#191919;padding:5px 8px;font-size:10px;font-weight:800;color:#fff;text-align:center;letter-spacing:.06em;text-transform:uppercase;border-top:2px solid #c96a10">${t('cpDoplataLbl')||'DOPŁATY'}</div>
           <div id="eq-sur-list">
             <div class="eq-sur-row" style="display:grid;grid-template-columns:1fr 1fr 26px;gap:5px;align-items:center;padding:6px 8px;border-top:1px solid var(--bd)">
               <input class="eq-sur-grace" type="number" min="0" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:5px 8px;color:var(--t1);font-family:var(--mono);font-size:11px;outline:none">
@@ -372,17 +384,17 @@ function renderSettingsEquipment(){
             </div>
           </div>
           <div style="background:#191919;padding:4px 8px;display:flex;align-items:center;justify-content:flex-end">
-            <button type="button" onclick="addEqSurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">+ Dodaj próg dopłaty</button>
+            <button type="button" onclick="addEqSurRow()" style="height:22px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">${t('settEquipAddSurTier')||'+ Dodaj próg dopłaty'}</button>
           </div>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-top:5px">Zostaw puste jeśli nie chcesz teraz.</div>
       </div>
       <div id="eq-error" style="color:var(--red);font-size:11px;min-height:16px;margin-bottom:6px"></div>
-      <button class="btn btn-p" onclick="addFleetVehicle()" style="width:auto;padding:0 16px;height:30px;font-size:11px">Dodaj pojazd</button>
+      <button class="btn btn-p" onclick="addFleetVehicle()" style="width:auto;padding:0 16px;height:30px;font-size:11px">${t('settEquipAddVehicle')||'Dodaj pojazd'}</button>
     </div>
 
     <div class="sett-card">
-      <h3>Lista sprzętu (${FLEET.length}) <span style="font-size:10px;color:var(--t3);font-weight:400">— przeciągnij żeby zmienić kolejność</span></h3>
+      <h3>${t('settEquipListTitle')||'Lista sprzętu'} (${FLEET.length}) <span style="font-size:10px;color:var(--t3);font-weight:400">— ${t('settEquipDragHint')||'przeciągnij żeby zmienić kolejność'}</span></h3>
       <div id="fleet-list" style="display:flex;flex-direction:column;gap:5px">
         ${FLEET.map((v,i)=>`
           <div class="fleet-item" draggable="true" data-idx="${i}"
@@ -612,7 +624,7 @@ function renderSettingsPrices(){
   const subHdr=(label)=>`<div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:7px 10px 4px;border-top:1px solid var(--bd)">${label}</div>`;
   const row=(cols,content)=>`<div style="display:grid;grid-template-columns:${cols};gap:8px;padding:5px 8px;border-top:1px solid var(--bd);align-items:center">${content}</div>`;
   const cell=(id,val,unit,min='0')=>`<div style="display:flex;align-items:center;justify-content:center;gap:2px"><input type="number" id="${id}" value="${val}" min="${min}" max="999" style="${inp}"><span style="${zl}">${unit}</span></div>`;
-  const lbl=(text)=>`<div style="font-size:11px;font-weight:700;color:#fff">${text}</div>`;
+  const lbl=(text)=>`<div style="font-size:11px;font-weight:700;color:var(--t1)">${text}</div>`;
 
   let cp={};try{cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');}catch(e){}
   const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
@@ -623,37 +635,36 @@ function renderSettingsPrices(){
   const customPriceCards=customTypes.map(type=>{
     const entries=cp[type]||[];
     const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
-    if(!entries.length)return `<div class="sett-card"><h3>${typeLabel} <span style="font-weight:400;color:var(--t3);font-size:10px">— brak cen</span></h3><div style="font-size:11px;color:var(--t2)">Dodaj pojazdy z cenami w <button onclick="showV('settings-equipment')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:11px;padding:0;font-family:var(--font)">Zarządzaniu sprzętem</button>.</div></div>`;
+    if(!entries.length)return `<div class="sett-card"><h3>${typeLabel} <span style="font-weight:400;color:var(--t3);font-size:10px">— brak cen</span></h3><div style="font-size:11px;color:var(--t2)">Dodaj pojazdy z cenami w <button onclick="showV('settings-equipment')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:11px;padding:0;font-family:var(--font)">${t('settEquipTitle')||'Zarządzaniu sprzętem'}</button>.</div></div>`;
     const allDurVals=[...new Set(entries.flatMap(e=>(e.durs&&e.durs.length?e.durs:[{v:30},{v:60}]).map(d=>d.v)))].sort((a,b)=>a-b);
     const colsCss=`1fr ${allDurVals.map(()=>'68px').join(' ')}`;
     return `<div class="sett-card">
       <h3>${typeLabel}</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        ${hdr(colsCss)}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div>${allDurVals.map(v=>`<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${durLabels[v]||v+'m'}</div>`).join('')}</div>
+        ${hdr(colsCss)}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div>${allDurVals.map(v=>`<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${durLabels[v]||v+'m'}</div>`).join('')}</div>
         ${entries.map((e,ei)=>row(colsCss,`${lbl(e.name.toUpperCase())}${allDurVals.map(dv=>{const d=(e.durs||[]).find(x=>x.v===dv);return cell(`ctp-${type}-${ei}-${dv}`,d?d.p:0,'zł');}).join('')}`)  ).join('')}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">Zapisz ${typeLabel}</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">${t('settSaveKarts')||'Zapisz'} ${typeLabel}</button>
     </div>`;
   }).join('');
 
   // ── Custom type surcharge rows for unified dopłaty section ──
+  const _surMarka=t('cpMarka')||'MARKA';
+  const _surGrace=t('settSurGrace')||'PO MIN';
+  const _surDoplata=t('cpDoplataLbl')||'DOPŁATA';
   const customSurRows=customTypes.map(type=>{
     const entries=cp[type]||[];
     const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
     if(!entries.length)return '';
-    const hasAnySur=entries.some(e=>e.surcharges&&e.surcharges.length);
+    const hasSur=entries.some(e=>e.surcharges&&e.surcharges.length);
+    if(!hasSur)return '';
     return `${subHdr(typeLabel)}
-      <div style="padding:0 10px 8px">
+      <div style="background:var(--s2);margin:0 0 4px">
+        ${hdr('1fr 68px 68px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${_surMarka}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surGrace}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplata}</div></div>
         ${entries.map((e,ei)=>{
-          const surs=e.surcharges||[];
-          if(!surs.length)return `<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--t2);margin-bottom:3px">${e.name.toUpperCase()}</div><div style="font-size:10px;color:var(--t3)">Brak zdefiniowanych dopłat.</div></div>`;
-          return `<div style="margin-bottom:8px">
-            <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
-            ${surs.map((s,si)=>`
-              ${row('1fr 60px',`${lbl('Czas bez dopłaty')}${cell('ctsur-'+type+'-'+ei+'-grace-'+si,s.graceMin||0,'min')}`).replace('border-top:1px solid var(--bd)','')}
-              ${row('1fr 60px',`${lbl('Dopłata')}${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`).replace('border-top:1px solid var(--bd)','')}
-            `).join('')}
-          </div>`;
+          const s=(e.surcharges||[])[0];
+          if(!s)return row('1fr 68px 68px',`${lbl(e.name.toUpperCase())}<div style="font-size:10px;color:var(--t3);text-align:center;grid-column:2/4">—</div>`);
+          return row('1fr 68px 68px',`${lbl(e.name.toUpperCase())}${cell('ctsur-'+type+'-'+ei+'-grace-0',s.graceMin||0,'min')}${cell('ctsur-'+type+'-'+ei+'-ph-0',s.perHour||0,'zł','1')}`);
         }).join('')}
       </div>`;
   }).join('');
@@ -665,39 +676,39 @@ function renderSettingsPrices(){
     </div>
 
     <div class="sett-card">
-      <h3>Gokarty</h3>
+      <h3>${t('settKarts')||'Gokarty'}</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        ${hdr('1fr 76px 76px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">30 min</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1 godz.</div></div>
+        ${hdr('1fr 76px 76px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpMarka')||'MARKA'}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">30 min</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1 godz.</div></div>
         ${KARTS.map((k,i)=>row('1fr 76px 76px',`${lbl(k.name.toUpperCase())}${cell('kp-'+i+'-30',k.p[30],'zł')}${cell('kp-'+i+'-60',k.p[60],'zł')}`)).join('')}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveKartPrices()">Zapisz gokarty</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveKartPrices()">${t('settSaveKarts')||'Zapisz gokarty'}</button>
     </div>
 
     <div class="sett-card">
-      <h3>Rowery</h3>
+      <h3>${t('settBikes')||'Rowery'}</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        ${hdr('1fr 52px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">CZAS</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div></div>
-        ${[[60,'1 GODZINA'],[180,'3 GODZINY'],[1440,'CAŁY DZIEŃ']].map(([dur,name])=>row('1fr 52px',`${lbl(name)}${cell('bp-'+dur,BIKES[dur],'zł','1')}`)).join('')}
+        ${hdr('1fr 52px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">${t('cpTime')||'CZAS'}</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${t('cpPrice')||'CENA'}</div></div>
+        ${[[60,t('cpHour')||'1 GODZINA'],[180,t('cpHours3')||'3 GODZINY'],[1440,t('allDay')||'CAŁY DZIEŃ']].map(([dur,name])=>row('1fr 52px',`${lbl(name.toUpperCase())}${cell('bp-'+dur,BIKES[dur],'zł','1')}`)).join('')}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveBikePrices()">Zapisz rowery</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveBikePrices()">${t('settSaveBikes')||'Zapisz rowery'}</button>
     </div>
 
     ${customPriceCards}
 
     <div class="sett-card">
-      <h3>Ustawienia dopłat</h3>
+      <h3>${t('settSurTitle')||'Ustawienia dopłat'}</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        ${subHdr('Wspólne')}
-        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl('Czas bez dopłaty')}${cell('sp-grace',SURCHARGE.graceMin,'min')}`).replace('border-top:1px solid var(--bd)','')}</div>
-        ${subHdr('Gokarty')}
-        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl('Dopłata / godz.')}${cell('sp-kart',SURCHARGE.kartHour,'zł','1')}`).replace('border-top:1px solid var(--bd)','')}</div>
-        ${subHdr('Rowery')}
+        ${subHdr(t('settSurCommon')||'Wspólne')}
+        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl(t('settSurGrace')||'Czas bez dopłaty')}${cell('sp-grace',SURCHARGE.graceMin,'min')}`).replace('border-top:1px solid var(--bd)','')}</div>
+        ${subHdr(t('settKarts')||'Gokarty')}
+        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl(t('settSurKartH')||'Dopłata / godz.')}${cell('sp-kart',SURCHARGE.kartHour,'zł','1')}`).replace('border-top:1px solid var(--bd)','')}</div>
+        ${subHdr(t('settBikes')||'Rowery')}
         <div style="padding:0 10px 8px">
-          ${[['sp-bike1','Do 1h',SURCHARGE.bikeUpto1h],['sp-bike3','Do 3h',SURCHARGE.bikeUpto3h],['sp-bikeh','Każda nast. godz.',SURCHARGE.bikePerHour]].map(([id,name,val])=>row('1fr 60px',`${lbl(name)}${cell(id,val,'zł','1')}`).replace('border-top:1px solid var(--bd)','')).join('')}
+          ${[['sp-bike1',t('settSurBike1')||'Do 1h',SURCHARGE.bikeUpto1h],['sp-bike3',t('settSurBike3')||'Do 3h',SURCHARGE.bikeUpto3h],['sp-bikeh',t('settSurBikeH')||'Każda nast. godz.',SURCHARGE.bikePerHour]].map(([id,name,val])=>row('1fr 60px',`${lbl(name)}${cell(id,val,'zł','1')}`).replace('border-top:1px solid var(--bd)','')).join('')}
         </div>
         ${customSurRows}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">${t('settSurTitle')||'Zapisz dopłaty'}</button>
     </div>`;
 }
 function saveCustomTypePrices(type){

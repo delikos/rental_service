@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
+const crypto = require('crypto');
 
 const userDataPath = app.getPath('userData');
 const dbPath       = path.join(userDataPath, 'relax.db');
@@ -74,21 +75,24 @@ ipcMain.handle('db:kvSet', (_, key, val) => {
 });
 
 ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
+  const mainWin = BrowserWindow.fromWebContents(event.sender);
+  // Show save dialog FIRST while main window still has focus
+  const { filePath, canceled } = await dialog.showSaveDialog(mainWin, {
+    defaultPath: defaultName || 'raport.pdf',
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+  if (canceled || !filePath) return false;
+
   const tmpPath = path.join(app.getPath('temp'), `relax_pdf_${Date.now()}.html`);
   const hidden = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
   try {
     fs.writeFileSync(tmpPath, htmlContent, 'utf8');
     await hidden.loadFile(tmpPath);
     await new Promise(resolve => hidden.webContents.once('did-finish-load', resolve));
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 600));
     const pdfData = await hidden.webContents.printToPDF({ printBackground: true, pageSize: 'A4' });
     hidden.close();
     try { fs.unlinkSync(tmpPath); } catch(_) {}
-    const { filePath, canceled } = await dialog.showSaveDialog({
-      defaultPath: defaultName || 'raport.pdf',
-      filters: [{ name: 'PDF', extensions: ['pdf'] }]
-    });
-    if (canceled || !filePath) return false;
     fs.writeFileSync(filePath, Buffer.isBuffer(pdfData) ? pdfData : Buffer.from(pdfData));
     return true;
   } catch(e) {
@@ -98,12 +102,34 @@ ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
   }
 });
 
-ipcMain.handle('win:minimize', () => BrowserWindow.getFocusedWindow()?.minimize());
-ipcMain.handle('win:maximize', () => {
-  const w = BrowserWindow.getFocusedWindow();
+ipcMain.handle('win:focus', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) { win.show(); win.focus(); }
+});
+
+ipcMain.handle('auth:hashPw', (_, pw) => {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512').toString('hex');
+  return 'pbkdf2:' + salt + ':' + hash;
+});
+
+ipcMain.handle('auth:verifyPw', (_, pw, stored) => {
+  if (!stored || !stored.startsWith('pbkdf2:')) {
+    // djb2 fallback for legacy hashes
+    let h = 5381;
+    for (let i = 0; i < pw.length; i++) h = ((h << 5) + h) + pw.charCodeAt(i) & 0xffffffff;
+    return h.toString(16) === stored;
+  }
+  const [, salt, hash] = stored.split(':');
+  return crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512').toString('hex') === hash;
+});
+
+ipcMain.handle('win:minimize', (event) => BrowserWindow.fromWebContents(event.sender)?.minimize());
+ipcMain.handle('win:maximize', (event) => {
+  const w = BrowserWindow.fromWebContents(event.sender);
   w?.isMaximized() ? w.unmaximize() : w?.maximize();
 });
-ipcMain.handle('win:close', () => BrowserWindow.getFocusedWindow()?.close());
+ipcMain.handle('win:close', (event) => BrowserWindow.fromWebContents(event.sender)?.close());
 
 // ── Window ────────────────────────────────────────────────────────
 function createWindow() {
