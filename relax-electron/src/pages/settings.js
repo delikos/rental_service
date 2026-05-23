@@ -3,10 +3,16 @@ var DEFAULT_PERMS={viewRentals:true,addRental:true,endRental:true,viewHistory:tr
 function renderSettings(){
   if(!currentUser||currentUser.role!=='admin'){document.getElementById('content').innerHTML=`<div class="empty"><p>Brak dostępu — tylko administrator</p></div>`;return;}
   const inSt='width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none';
+  const sortedUsers=[...users].sort((a,b)=>{
+    if(a.role==='admin'&&b.role!=='admin')return -1;
+    if(a.role!=='admin'&&b.role==='admin')return 1;
+    if(a.role!=='admin'&&b.role!=='admin')return a.name.localeCompare(b.name,'pl');
+    return 0;
+  });
   document.getElementById('content').innerHTML=`
     <div class="sett-card">
       <h3>${t('settUsers')||'Użytkownicy systemu'}</h3>
-      ${users.map(u=>{
+      ${sortedUsers.map(u=>{
         const perms=u.perms||DEFAULT_PERMS;
         const isAdmin=u.role==='admin';
         const cardId='ucard-'+u.id;
@@ -95,15 +101,15 @@ function renderSettings(){
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
         <div style="margin-top:12px">
-          <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Kategorie pojazdów w raporcie:</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:10px">${t('settRepCatLbl')||'Kategorie pojazdów w raporcie:'}</div>
           ${(()=>{
             let cats;try{const raw=localStorage.getItem('rl2_report_categories');cats=raw?JSON.parse(raw):null;}catch(e){cats=null;}
             const allTypes=[{type:'gokart',label:'Gokarty'},{type:'rower',label:'Rowery'},...getCustomTypes().filter(x=>x!=='gokart'&&x!=='rower').map(tp=>({type:tp,label:tp.charAt(0).toUpperCase()+tp.slice(1)}))];
             if(!cats)cats=[...allTypes];
-            return allTypes.map(at=>{const checked=cats.some(c=>c.type===at.type);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:8px"><input type="checkbox" ${checked?'checked':''} onchange="toggleReportCat('${at.type}','${at.label}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${at.label}</span></label>`;}).join('')+'<div style="font-size:10px;color:var(--t3);margin-top:4px">Zmiany są zapisywane automatycznie.</div>';
+            return allTypes.map(at=>{const checked=cats.some(c=>c.type===at.type);return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-bottom:8px"><input type="checkbox" ${checked?'checked':''} onchange="toggleReportCat('${at.type}','${at.label}',this.checked)" style="width:14px;height:14px;accent-color:var(--acc)"><span>${at.label}</span></label>`;}).join('')+`<div style="font-size:10px;color:var(--t3);margin-top:4px">${t('settRepAutoSave')||'Zmiany są zapisywane automatycznie.'}</div>`;
           })()}
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-            <div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dane w raporcie PDF:</div>
+            <div style="font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">${t('settRepFieldsLbl')||'Dane w raporcie PDF:'}</div>
             ${(()=>{
               const pdfFields=[{k:'pdf_rentals',l:'Ilość wypożyczeń'},{k:'pdf_per_equip',l:'Wypożyczenia według sprzętu'},{k:'pdf_revenue',l:'Łączny przychód'},{k:'pdf_surcharge',l:'Łączne dopłaty'},{k:'pdf_top_model',l:'Najczęściej wypożyczany model'},{k:'pdf_avg_dur',l:'Średni czas wypożyczenia'},{k:'pdf_peak_hour',l:'Godzina szczytu'}];
               let saved;try{const r=localStorage.getItem('rl2_pdf_fields');saved=r?JSON.parse(r):null;}catch(e){saved=null;}
@@ -250,7 +256,10 @@ function setUserLang(uid,lang){
   if(currentUser&&u.id===currentUser.id){
     currentUser.lang=lang;
     applyLang();
-    if(currentView==='settings')renderSettings();
+    ['pl','en','uk'].forEach(l=>{
+      const btn=document.getElementById('lang-btn-'+uid+'-'+l);
+      if(btn)btn.style.borderColor=l===lang?'var(--acc)':'var(--bd)';
+    });
     return;
   }
   ['pl','en','uk'].forEach(l=>{
@@ -640,13 +649,12 @@ function renderSettingsPrices(){
           if(!surs.length)return `<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--t2);margin-bottom:3px">${e.name.toUpperCase()}</div><div style="font-size:10px;color:var(--t3)">Brak zdefiniowanych dopłat.</div></div>`;
           return `<div style="margin-bottom:8px">
             <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
-            ${surs.map((s,si)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:3px;align-items:center">
-              <div style="display:flex;align-items:center;gap:3px"><input type="number" id="ctsur-${type}-${ei}-grace-${si}" value="${s.graceMin||0}" min="0" style="${inp}"><span style="${zl}">min</span></div>
-              <div style="display:flex;align-items:center;gap:3px"><input type="number" id="ctsur-${type}-${ei}-ph-${si}" value="${s.perHour||0}" min="0" style="${inp}"><span style="${zl}">zł/h</span></div>
-            </div>`).join('')}
+            ${surs.map((s,si)=>`
+              ${row('1fr 60px',`${lbl('Czas bez dopłaty')}${cell('ctsur-'+type+'-'+ei+'-grace-'+si,s.graceMin||0,'min')}`).replace('border-top:1px solid var(--bd)','')}
+              ${row('1fr 60px',`${lbl('Dopłata')}${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`).replace('border-top:1px solid var(--bd)','')}
+            `).join('')}
           </div>`;
         }).join('')}
-        <button class="btn btn-p" style="margin-top:4px;width:auto;padding:0 12px;height:26px;font-size:11px" onclick="saveCustomTypeSurcharges('${type}')">Zapisz ${typeLabel}</button>
       </div>`;
   }).join('');
 
@@ -689,7 +697,7 @@ function renderSettingsPrices(){
         </div>
         ${customSurRows}
       </div>
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty std.</button>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty</button>
     </div>`;
 }
 function saveCustomTypePrices(type){
@@ -709,9 +717,9 @@ function saveCustomTypePrices(type){
     setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
   }catch(e){console.error(e);}
 }
-function saveCustomTypeSurcharges(type){
+function saveCustomTypeSurcharges(type,existingCp){
   try{
-    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const cp=existingCp||JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
     const entries=cp[type]||[];
     entries.forEach((e,ei)=>{
       (e.surcharges||[]).forEach((s,si)=>{
@@ -721,10 +729,7 @@ function saveCustomTypeSurcharges(type){
         if(p)s.perHour=parseInt(p.value)||0;
       });
     });
-    localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
-    const btn=event.target;const orig=btn.textContent;
-    btn.textContent='✓ Zapisano';btn.style.background='var(--green)';
-    setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
+    if(!existingCp)localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
   }catch(e){console.error(e);}
 }
 
@@ -764,6 +769,8 @@ function saveSurchargePrices(){
   if(b3>0)SURCHARGE.bikeUpto3h=b3;
   if(bh>0)SURCHARGE.bikePerHour=bh;
   savePrices();
+  // also save custom type surcharges
+  try{const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');Object.keys(cp).forEach(type=>saveCustomTypeSurcharges(type,cp));}catch(e){}
   renderCennikPanel();
   const btn=event.target;const orig=btn.textContent;
   btn.textContent='✓ Zapisano';btn.style.background='var(--green)';
@@ -799,7 +806,7 @@ async function exportAllData(){
     a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
     a.download=`relax_backup_${ds}.json`;
     document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),500);
-    if(msg){msg.textContent='✓ Eksport gotowy';msg.style.color='var(--green)';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
+    if(msg){msg.textContent=t('settExportOk')||'✓ Eksport gotowy';msg.style.color='var(--green)';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
   }catch(e){if(msg){msg.textContent='Błąd eksportu: '+e.message;msg.style.color='var(--red)';}}
 }
 
@@ -814,11 +821,12 @@ function importAllData(){
       const data=JSON.parse(text);
       if(!data||!data.version){if(msg){msg.textContent='Nieprawidłowy plik kopii zapasowej.';msg.style.color='var(--red)';}return;}
       if(!confirm('Czy na pewno chcesz przywrócić dane? Obecne dane zostaną zastąpione przez dane z pliku!'))return;
-      if(Array.isArray(data.rl2_r))IAPI.saveRentals(data.rl2_r);
-      if(Array.isArray(data.rl2_u))IAPI.saveUsers(data.rl2_u);
-      if(Array.isArray(data.rl2_sessions))IAPI.saveSessions(data.rl2_sessions);
+      if(msg){msg.textContent='Importowanie...';msg.style.color='var(--t2)';}
+      if(Array.isArray(data.rl2_r))await IAPI.saveRentals(data.rl2_r);
+      if(Array.isArray(data.rl2_u))await IAPI.saveUsers(data.rl2_u);
+      if(Array.isArray(data.rl2_sessions))await IAPI.saveSessions(data.rl2_sessions);
       const kvKeys=['rl2_fleet','rl2_custom_prices','rl2_prices','rl2_tasks','rl2_report_categories','rl2_pdf_fields','rl2_theme'];
-      kvKeys.forEach(k=>{if(data[k]!==undefined&&data[k]!==null){try{IAPI._kvSet(k,data[k]);}catch(e){}}});
+      for(const k of kvKeys){if(data[k]!==undefined&&data[k]!==null){try{await IAPI._kvSet(k,data[k]);}catch(e){}}}
       if(msg){msg.textContent='✓ Import zakończony — ponowne ładowanie...';msg.style.color='var(--green)';}
       setTimeout(()=>window.location.reload(),800);
     }catch(e){if(msg){msg.textContent='Błąd importu: '+e.message;msg.style.color='var(--red)';}}

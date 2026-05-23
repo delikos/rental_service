@@ -101,10 +101,12 @@ function saveEditTask(id){
   const title=document.getElementById('task-title')?.value.trim();
   const errEl=document.getElementById('task-err');
   if(!title){if(errEl)errEl.textContent='Tytuł jest wymagany.';return;}
+  const dateVal=document.getElementById('task-date')?.value.trim()||'';
+  if(dateVal&&!/^\d{2}\.\d{2}\.\d{4}$/.test(dateVal)){if(errEl)errEl.textContent='Data musi być w formacie dd.mm.yyyy.';return;}
   if(errEl)errEl.textContent='';
   const tk=tasks.find(t=>t.id===id);if(!tk)return;
   tk.title=title;
-  tk.date=document.getElementById('task-date')?.value||'';
+  tk.date=dateVal;
   tk.assignee=document.getElementById('task-assignee')?.value||'';
   tk.desc=document.getElementById('task-desc')?.value.trim()||'';
   saveTasks();renderTasks();
@@ -114,8 +116,10 @@ function addTask(){
   const title=document.getElementById('task-title')?.value.trim();
   const errEl=document.getElementById('task-err');
   if(!title){if(errEl)errEl.textContent='Tytuł jest wymagany.';return;}
+  const dateVal=document.getElementById('task-date')?.value.trim()||'';
+  if(dateVal&&!/^\d{2}\.\d{2}\.\d{4}$/.test(dateVal)){if(errEl)errEl.textContent='Data musi być w formacie dd.mm.yyyy.';return;}
   if(errEl)errEl.textContent='';
-  tasks.push({id:uid(),title,date:document.getElementById('task-date')?.value||new Date().toISOString().slice(0,10),assignee:document.getElementById('task-assignee')?.value||'',desc:document.getElementById('task-desc')?.value.trim()||'',author:currentUser?.name||'',createdTs:Date.now()});
+  tasks.push({id:uid(),title,date:dateVal,assignee:document.getElementById('task-assignee')?.value||'',desc:document.getElementById('task-desc')?.value.trim()||'',author:currentUser?.name||'',createdTs:Date.now()});
   saveTasks();renderTasks();
 }
 

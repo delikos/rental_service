@@ -60,7 +60,8 @@ function buildReportData(){
 
 async function exportReportPDF(){
   let fields;try{const r=localStorage.getItem('rl2_pdf_fields');fields=r?JSON.parse(r):null;}catch(e){fields=null;}
-  if(!fields||!fields.length)return;
+  if(!fields)fields=['pdf_rentals','pdf_per_equip','pdf_revenue','pdf_surcharge','pdf_top_model','pdf_avg_dur','pdf_peak_hour'];
+  if(!fields.length)return;
   const today=new Date();
   const dateStr=`${today.getDate().toString().padStart(2,'0')}.${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getFullYear()}`;
   const pdfDate=`${today.getDate().toString().padStart(2,'0')}_${(today.getMonth()+1).toString().padStart(2,'0')}_${today.getFullYear()}`;
