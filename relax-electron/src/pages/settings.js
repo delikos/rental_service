@@ -85,7 +85,7 @@ function renderSettings(){
     </div>
 
     <div class="sett-card">
-      <h3 style="display:flex;align-items:center;justify-content:space-between">${t('settEquip')||'Sprzęt'} <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} pojazdów</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">${t('settEquipManage')||'Zarządzaj →'}</button></h3>
+      <h3 style="display:flex;align-items:center;justify-content:space-between">${t('settEquip')||'Sprzęt'} <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} ${t('settVehiclesCount')||'pojazdów'}</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">${t('settEquipManage')||'Zarządzaj →'}</button></h3>
     </div>
 
     <div class="sett-card">
@@ -597,139 +597,108 @@ function removeFleetVehicle(i){
 }
 
 function renderSettingsPrices(){
-  const inpSt='background:var(--s2);border:1px solid var(--bd);border-radius:3px;padding:3px 2px;color:var(--t1);font-family:var(--mono);font-size:12px;font-weight:700;outline:none;text-align:center;width:44px';
-  const zlSt='font-size:9px;color:var(--t3)';
+  const inp='background:var(--s2);border:1px solid var(--bd);border-radius:3px;padding:3px 2px;color:var(--t1);font-family:var(--mono);font-size:12px;font-weight:700;outline:none;text-align:center;width:44px';
+  const zl='font-size:9px;color:var(--t3)';
+  const hdr=(cols)=>`<div style="display:grid;grid-template-columns:${cols};gap:8px;background:#1a1a1a;padding:4px 8px;align-items:center">`;
+  const subHdr=(label)=>`<div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:7px 10px 4px;border-top:1px solid var(--bd)">${label}</div>`;
+  const row=(cols,content)=>`<div style="display:grid;grid-template-columns:${cols};gap:8px;padding:5px 8px;border-top:1px solid var(--bd);align-items:center">${content}</div>`;
+  const cell=(id,val,unit,min='0')=>`<div style="display:flex;align-items:center;justify-content:center;gap:2px"><input type="number" id="${id}" value="${val}" min="${min}" max="999" style="${inp}"><span style="${zl}">${unit}</span></div>`;
+  const lbl=(text)=>`<div style="font-size:11px;font-weight:700;color:#fff">${text}</div>`;
+
+  let cp={};try{cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');}catch(e){}
+  const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+  const durLabels={30:'30 min',60:'1 godz.',90:'90 min',120:'2 godz.',180:'3 godz.',240:'4 godz.',360:'6 godz.',720:'12 godz.',1440:'Cały dzień'};
+  const backBtn=`<button onclick="showV('settings')" style="height:32px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>${t('settPricesBack')||'Powrót'}</button>`;
+
+  // ── Custom type price cards (same design as Gokarty/Rowery) ──
+  const customPriceCards=customTypes.map(type=>{
+    const entries=cp[type]||[];
+    const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
+    if(!entries.length)return `<div class="sett-card"><h3>${typeLabel} <span style="font-weight:400;color:var(--t3);font-size:10px">— brak cen</span></h3><div style="font-size:11px;color:var(--t2)">Dodaj pojazdy z cenami w <button onclick="showV('settings-equipment')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:11px;padding:0;font-family:var(--font)">Zarządzaniu sprzętem</button>.</div></div>`;
+    const allDurVals=[...new Set(entries.flatMap(e=>(e.durs&&e.durs.length?e.durs:[{v:30},{v:60}]).map(d=>d.v)))].sort((a,b)=>a-b);
+    const colsCss=`1fr ${allDurVals.map(()=>'68px').join(' ')}`;
+    return `<div class="sett-card">
+      <h3>${typeLabel}</h3>
+      <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
+        ${hdr(colsCss)}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div>${allDurVals.map(v=>`<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${durLabels[v]||v+'m'}</div>`).join('')}</div>
+        ${entries.map((e,ei)=>row(colsCss,`${lbl(e.name.toUpperCase())}${allDurVals.map(dv=>{const d=(e.durs||[]).find(x=>x.v===dv);return cell(`ctp-${type}-${ei}-${dv}`,d?d.p:0,'zł');}).join('')}`)  ).join('')}
+      </div>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">Zapisz ${typeLabel}</button>
+    </div>`;
+  }).join('');
+
+  // ── Custom type surcharge rows for unified dopłaty section ──
+  const customSurRows=customTypes.map(type=>{
+    const entries=cp[type]||[];
+    const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
+    if(!entries.length)return '';
+    const hasAnySur=entries.some(e=>e.surcharges&&e.surcharges.length);
+    return `${subHdr(typeLabel)}
+      <div style="padding:0 10px 8px">
+        ${entries.map((e,ei)=>{
+          const surs=e.surcharges||[];
+          if(!surs.length)return `<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--t2);margin-bottom:3px">${e.name.toUpperCase()}</div><div style="font-size:10px;color:var(--t3)">Brak zdefiniowanych dopłat.</div></div>`;
+          return `<div style="margin-bottom:8px">
+            <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
+            ${surs.map((s,si)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:3px;align-items:center">
+              <div style="display:flex;align-items:center;gap:3px"><input type="number" id="ctsur-${type}-${ei}-grace-${si}" value="${s.graceMin||0}" min="0" style="${inp}"><span style="${zl}">min</span></div>
+              <div style="display:flex;align-items:center;gap:3px"><input type="number" id="ctsur-${type}-${ei}-ph-${si}" value="${s.perHour||0}" min="0" style="${inp}"><span style="${zl}">zł/h</span></div>
+            </div>`).join('')}
+          </div>`;
+        }).join('')}
+        <button class="btn btn-p" style="margin-top:4px;width:auto;padding:0 12px;height:26px;font-size:11px" onclick="saveCustomTypeSurcharges('${type}')">Zapisz ${typeLabel}</button>
+      </div>`;
+  }).join('');
+
   document.getElementById('content').innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <button onclick="showV('settings')" style="height:32px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Powrót
-      </button>
-      <h2 style="font-size:15px;font-weight:700">Edycja cen</h2>
+      ${backBtn}
+      <h2 style="font-size:15px;font-weight:700">${t('settPricesTitle')||'Edycja cen'}</h2>
     </div>
+
     <div class="sett-card">
       <h3>Gokarty</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 76px 76px;gap:8px;background:#1a1a1a;padding:4px 8px;align-items:center">
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div>
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1/2H</div>
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1H</div>
-        </div>
-        ${KARTS.map((k,i)=>`
-          <div style="display:grid;grid-template-columns:1fr 76px 76px;gap:8px;padding:5px 8px;border-top:1px solid var(--bd);align-items:center">
-            <div style="font-size:11px;font-weight:700;color:#fff">${k.name.toUpperCase()}</div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:2px">
-              <input type="number" id="kp-${i}-30" value="${k.p[30]}" min="0" max="999" style="${inpSt}">
-              <span style="${zlSt}">zł</span>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:2px">
-              <input type="number" id="kp-${i}-60" value="${k.p[60]}" min="0" max="999" style="${inpSt}">
-              <span style="${zlSt}">zł</span>
-            </div>
-          </div>`).join('')}
+        ${hdr('1fr 76px 76px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">MARKA</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">30 min</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">1 godz.</div></div>
+        ${KARTS.map((k,i)=>row('1fr 76px 76px',`${lbl(k.name.toUpperCase())}${cell('kp-'+i+'-30',k.p[30],'zł')}${cell('kp-'+i+'-60',k.p[60],'zł')}`)).join('')}
       </div>
       <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveKartPrices()">Zapisz gokarty</button>
     </div>
+
     <div class="sett-card">
       <h3>Rowery</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 52px;background:#1a1a1a;padding:4px 8px">
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">CZAS</div>
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div>
-        </div>
-        ${Object.entries({60:'1 GODZINA',180:'3 GODZINY',1440:'CAŁY DZIEŃ'}).map(([dur,lbl])=>`
-          <div style="display:grid;grid-template-columns:1fr 52px;padding:5px 8px;border-top:1px solid var(--bd);align-items:center">
-            <div style="font-size:11px;font-weight:700;color:#fff">${lbl}</div>
-            <div style="text-align:center;display:flex;align-items:center;justify-content:center;gap:2px">
-              <input type="number" id="bp-${dur}" value="${BIKES[dur]}" min="1" max="999" style="${inpSt}">
-              <span style="${zlSt}">zł</span>
-            </div>
-          </div>`).join('')}
+        ${hdr('1fr 52px')}<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">CZAS</div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div></div>
+        ${[[60,'1 GODZINA'],[180,'3 GODZINY'],[1440,'CAŁY DZIEŃ']].map(([dur,name])=>row('1fr 52px',`${lbl(name)}${cell('bp-'+dur,BIKES[dur],'zł','1')}`)).join('')}
       </div>
       <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveBikePrices()">Zapisz rowery</button>
     </div>
+
+    ${customPriceCards}
+
     <div class="sett-card">
       <h3>Ustawienia dopłat</h3>
       <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 60px;background:#1a1a1a;padding:4px 8px">
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">PARAMETR</div>
-          <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">WARTOŚĆ</div>
+        ${subHdr('Wspólne')}
+        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl('Czas bez dopłaty')}${cell('sp-grace',SURCHARGE.graceMin,'min')}`).replace('border-top:1px solid var(--bd)','')}</div>
+        ${subHdr('Gokarty')}
+        <div style="padding:0 10px 8px">${row('1fr 60px',`${lbl('Dopłata / godz.')}${cell('sp-kart',SURCHARGE.kartHour,'zł','1')}`).replace('border-top:1px solid var(--bd)','')}</div>
+        ${subHdr('Rowery')}
+        <div style="padding:0 10px 8px">
+          ${[['sp-bike1','Do 1h',SURCHARGE.bikeUpto1h],['sp-bike3','Do 3h',SURCHARGE.bikeUpto3h],['sp-bikeh','Każda nast. godz.',SURCHARGE.bikePerHour]].map(([id,name,val])=>row('1fr 60px',`${lbl(name)}${cell(id,val,'zł','1')}`).replace('border-top:1px solid var(--bd)','')).join('')}
         </div>
-        ${[
-          ['sp-grace','Czas bez dopłaty','min',SURCHARGE.graceMin],
-          ['sp-kart','Gokart — dopłata/godz.','zł',SURCHARGE.kartHour],
-          ['sp-bike1','Rower — do 1h','zł',SURCHARGE.bikeUpto1h],
-          ['sp-bike3','Rower — do 3h','zł',SURCHARGE.bikeUpto3h],
-          ['sp-bikeh','Rower — każda nast. godz.','zł',SURCHARGE.bikePerHour],
-        ].map(([id,lbl,unit,val])=>`
-          <div style="display:grid;grid-template-columns:1fr 60px;padding:5px 8px;border-top:1px solid var(--bd);align-items:center">
-            <div style="font-size:11px;font-weight:700;color:#fff">${lbl}</div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:2px">
-              <input type="number" id="${id}" value="${val}" min="1" max="999" style="${inpSt}">
-              <span style="${zlSt}">${unit}</span>
-            </div>
-          </div>`).join('')}
-      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty</button>
-    </div>
-    ${(()=>{
-      try{
-        const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
-        const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
-        if(!customTypes.length)return '';
-        return customTypes.map(type=>{
-          const entries=cp[type]||[];
-          if(!entries.length)return `<div class="sett-card"><h3>${type.charAt(0).toUpperCase()+type.slice(1)} <span style="font-weight:400;color:var(--t3);font-size:10px">— brak cen</span></h3><div style="font-size:11px;color:var(--t2)">Dodaj pojazdy z cenami w <button onclick="showV('settings-equipment')" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:11px;padding:0;font-family:var(--font)">Zarządzaniu sprzętem</button>.</div></div>`;
-          const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
-          return `<div class="sett-card">
-            <h3>${typeLabel}</h3>
-            ${entries.map((e,ei)=>{
-              const allDurs=[];
-              if(e.durs&&e.durs.length)e.durs.forEach(d=>allDurs.push({v:d.v,p:d.p}));
-              else{if(e.p&&e.p[30]>0)allDurs.push({v:30,p:e.p[30]});if(e.p&&e.p[60]>0)allDurs.push({v:60,p:e.p[60]});}
-              const presets=[[30,'30 min'],[60,'1 godz.'],[90,'90 min'],[120,'2 godz.'],[180,'3 godz.'],[240,'4 godz.'],[360,'6 godz.'],[720,'12 godz.'],[1440,'Cały dzień']];
-              return `<div style="margin-bottom:10px">
-                <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px">${e.name.toUpperCase()}</div>
-                <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden;margin-bottom:6px">
-                  <div style="display:grid;grid-template-columns:1fr 76px 26px;gap:4px;background:#1a1a1a;padding:4px 8px;align-items:center">
-                    <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase">CZAS</div>
-                    <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">CENA</div>
-                    <div></div>
-                  </div>
-                  ${allDurs.map((d,di)=>`
-                  <div style="display:grid;grid-template-columns:1fr 76px 26px;gap:4px;padding:4px 8px;border-top:1px solid var(--bd);align-items:center">
-                    <select id="cp-${type}-${ei}-dur-${di}" style="background:var(--s3);border:1px solid var(--bd);border-radius:3px;padding:3px 4px;font-family:var(--mono);font-size:11px;color:var(--t1);outline:none">${presets.map(([v,l])=>`<option value="${v}"${v==d.v?' selected':''}>${l}</option>`).join('')}</select>
-                    <div style="display:flex;align-items:center;gap:2px;justify-content:center">
-                      <input type="number" id="cp-${type}-${ei}-price-${di}" value="${d.p}" min="0" style="${inpSt}">
-                      <span style="${zlSt}">zł</span>
-                    </div>
-                    <button onclick="this.closest('[data-entry]').querySelector('[data-durs]').children[${di}]?.remove();saveCustomTypePrices('${type}')" style="height:22px;width:22px;border-radius:3px;border:1px solid rgba(232,64,64,.2);background:rgba(232,64,64,.08);color:var(--red);cursor:pointer;font-size:11px">✕</button>
-                  </div>`).join('')}
-                  <div style="background:#1a1a1a;padding:3px 8px;text-align:right">
-                    <button onclick="addCustomTypeDurRow('${type}',${ei})" style="height:20px;padding:0 8px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#aaa;cursor:pointer;font-size:10px">+ Dodaj czas</button>
-                  </div>
-                </div>
-                ${e.surcharges&&e.surcharges.length?`<div style="font-size:10px;color:var(--t2);margin-bottom:4px">Dopłaty: ${e.surcharges.filter(s=>s.perHour>0).map(s=>`po ${s.graceMin} min → +${s.perHour} zł/godz.`).join(', ')}</div>`:''}
-              </div>`;
-            }).join('')}
-            <button class="btn btn-p" style="margin-top:4px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveCustomTypePrices('${type}')">Zapisz ${type}</button>
-          </div>`;
-        }).join('');
-      }catch(e){return '';}
-    })()}
-    `;
+        ${customSurRows}
+      </div>
+      <button class="btn btn-p" style="margin-top:8px;width:auto;padding:0 14px;height:28px;font-size:11px" onclick="saveSurchargePrices()">Zapisz dopłaty std.</button>
+    </div>`;
 }
 function saveCustomTypePrices(type){
   try{
     const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
     const entries=cp[type]||[];
+    const allDurVals=[...new Set(entries.flatMap(e=>(e.durs&&e.durs.length?e.durs:[{v:30},{v:60}]).map(d=>d.v)))].sort((a,b)=>a-b);
     entries.forEach((e,ei)=>{
-      const newDurs=[];
-      document.querySelectorAll(`[id^="cp-${type}-${ei}-dur-"]`).forEach((sel,di)=>{
-        const priceEl=document.getElementById(`cp-${type}-${ei}-price-${di}`);
-        const v=parseInt(sel.value)||0;
-        const p=parseInt(priceEl?.value)||0;
-        if(v>0)newDurs.push({v,p});
-      });
+      const newDurs=allDurVals.map(dv=>{const p=parseInt(document.getElementById(`ctp-${type}-${ei}-${dv}`)?.value)||0;return{v:dv,p};}).filter(d=>d.p>0);
       e.durs=newDurs;
       e.p={30:newDurs.find(d=>d.v===30)?.p||0,60:newDurs.find(d=>d.v===60)?.p||0};
     });
@@ -738,7 +707,25 @@ function saveCustomTypePrices(type){
     const btn=event.target;const orig=btn.textContent;
     btn.textContent='✓ Zapisano';btn.style.background='var(--green)';
     setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
-  }catch(e){}
+  }catch(e){console.error(e);}
+}
+function saveCustomTypeSurcharges(type){
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entries=cp[type]||[];
+    entries.forEach((e,ei)=>{
+      (e.surcharges||[]).forEach((s,si)=>{
+        const g=document.getElementById(`ctsur-${type}-${ei}-grace-${si}`);
+        const p=document.getElementById(`ctsur-${type}-${ei}-ph-${si}`);
+        if(g)s.graceMin=parseInt(g.value)||0;
+        if(p)s.perHour=parseInt(p.value)||0;
+      });
+    });
+    localStorage.setItem('rl2_custom_prices',JSON.stringify(cp));
+    const btn=event.target;const orig=btn.textContent;
+    btn.textContent='✓ Zapisano';btn.style.background='var(--green)';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
+  }catch(e){console.error(e);}
 }
 
 function togglePriceEdit(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}

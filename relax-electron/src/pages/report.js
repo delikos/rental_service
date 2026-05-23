@@ -96,8 +96,15 @@ async function exportReportPDF(){
       console.error('PDF error:',err);
     }
   } else {
-    const w=window.open('','_blank','width=800,height=600');
-    if(w){w.document.write(html+'<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>');w.document.close();}
+    const iframe=document.createElement('iframe');
+    iframe.style.cssText='position:fixed;width:0;height:0;border:0;left:-9999px;top:-9999px';
+    document.body.appendChild(iframe);
+    const doc=iframe.contentDocument||iframe.contentWindow.document;
+    doc.open();doc.write(html);doc.close();
+    setTimeout(()=>{
+      try{iframe.contentWindow.focus();iframe.contentWindow.print();}catch(e){}
+      setTimeout(()=>{try{document.body.removeChild(iframe);}catch(e){}},2000);
+    },500);
   }
 }
 

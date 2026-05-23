@@ -80,6 +80,7 @@ ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
     fs.writeFileSync(tmpPath, htmlContent, 'utf8');
     await hidden.loadFile(tmpPath);
     await new Promise(resolve => hidden.webContents.once('did-finish-load', resolve));
+    await new Promise(resolve => setTimeout(resolve, 400));
     const pdfData = await hidden.webContents.printToPDF({ printBackground: true, pageSize: 'A4' });
     hidden.close();
     try { fs.unlinkSync(tmpPath); } catch(_) {}
@@ -88,7 +89,7 @@ ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
       filters: [{ name: 'PDF', extensions: ['pdf'] }]
     });
     if (canceled || !filePath) return false;
-    fs.writeFileSync(filePath, pdfData);
+    fs.writeFileSync(filePath, Buffer.isBuffer(pdfData) ? pdfData : Buffer.from(pdfData));
     return true;
   } catch(e) {
     try { hidden.close(); } catch(_) {}
