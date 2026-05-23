@@ -83,7 +83,18 @@ async function exportReportPDF(){
   <div class="footer">Relax Wypożyczalnia • Raport dzienny • ${dateStr}</div>
   </body></html>`;
   if(typeof window.electronAPI!=='undefined'&&window.electronAPI.savePDF){
-    await window.electronAPI.savePDF(html,`relax_raport_${pdfDate}.pdf`);
+    const btn=document.getElementById('pdf-export-btn');
+    const origText=btn?btn.innerHTML:'';
+    if(btn){btn.innerHTML='⏳ PDF';btn.style.opacity='.6';btn.style.pointerEvents='none';}
+    try{
+      const ok=await window.electronAPI.savePDF(html,`relax_raport_${pdfDate}.pdf`);
+      if(btn){btn.innerHTML='✓ PDF';btn.style.background='var(--green)';btn.style.opacity='1';btn.style.pointerEvents='';}
+      setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background='var(--acc)';}},2000);
+    }catch(err){
+      if(btn){btn.innerHTML='✕ Błąd';btn.style.background='var(--red)';btn.style.opacity='1';btn.style.pointerEvents='';}
+      setTimeout(()=>{if(btn){btn.innerHTML=origText;btn.style.background='var(--acc)';}},3000);
+      console.error('PDF error:',err);
+    }
   } else {
     const w=window.open('','_blank','width=800,height=600');
     if(w){w.document.write(html+'<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>');w.document.close();}

@@ -117,6 +117,17 @@ function renderTracker(selId,filterModel){
   ddOpts+=`</optgroup>`;
   const bikeCount=items.filter(x=>x.v.vtype==='rower').length;
   ddOpts+=`<optgroup label="── ${t('trackerRowery')||'Rowery'} ──"><option value="type:rower"${filterModel==='type:rower'?'selected':''}>${t('bikeLabel')||'Rowery'}${bikeCount>0?' ('+bikeCount+')':''}</option></optgroup>`;
+  const customTypes=[...new Set(FLEET.filter(f=>f.type!=='gokart'&&f.type!=='rower').map(f=>f.type))];
+  customTypes.forEach(type=>{
+    const typeLabel=type.charAt(0).toUpperCase()+type.slice(1);
+    const typeModels=[...new Set(FLEET.filter(f=>f.type===type).map(f=>f.model))];
+    ddOpts+=`<optgroup label="── ${typeLabel} ──">`;
+    typeModels.forEach(model=>{
+      const cnt=items.filter(x=>x.v.vmodel===model).length;
+      ddOpts+=`<option value="model:${model}"${filterModel===('model:'+model)?'selected':''}>${model}${cnt>0?' ('+cnt+')':''}</option>`;
+    });
+    ddOpts+=`</optgroup>`;
+  });
 
   const filt=filterModel
     ? (filterModel.startsWith('model:')

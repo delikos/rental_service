@@ -36,7 +36,7 @@ function renderTasks(){
       <h3>${t('tasksNew')||'Nowe zadanie'}</h3>
       <div class="fg2" style="margin-bottom:8px">
         <div class="fr"><label>${t('tasksTitle')||'Tytuł *'}</label><input id="task-title" placeholder="${t('tasksShortDesc')||'Opis problemu w skrócie'}" style="${inSt}"></div>
-        <div class="fr"><label>${t('tasksDate')||'Data wystąpienia'}</label><input type="text" id="task-date" placeholder="np. ${new Date().toLocaleDateString('pl-PL')}" style="${inSt}"></div>
+        <div class="fr"><label>${t('tasksDate')||'Data wystąpienia'}</label><input type="text" id="task-date" placeholder="np. ${new Date().toLocaleDateString('pl-PL')}" style="${inSt}" oninput="(function(el){const v=el.value.replace(/[^0-9.]/g,'');el.value=v;el.style.borderColor=v&&!/^\d{2}\.\d{2}\.\d{4}$/.test(v)?'var(--red)':'var(--bd)'})(this)" onblur="(function(el){const v=el.value.trim();if(v&&/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(v)){const parts=v.split('.');el.value=parts[0].padStart(2,'0')+'.'+parts[1].padStart(2,'0')+'.'+parts[2];}el.style.borderColor=el.value&&!/^\d{2}\.\d{2}\.\d{4}$/.test(el.value)?'var(--red)':'var(--bd)'})(this)"></div>
       </div>
       <div class="fg2" style="margin-bottom:8px">
         <div class="fr"><label>${t('tasksAssign')||'Przypisz do'}</label>

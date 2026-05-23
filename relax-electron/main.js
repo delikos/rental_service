@@ -74,12 +74,15 @@ ipcMain.handle('db:kvSet', (_, key, val) => {
 });
 
 ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
+  const tmpPath = path.join(app.getPath('temp'), `relax_pdf_${Date.now()}.html`);
   const hidden = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
   try {
-    await hidden.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent));
+    fs.writeFileSync(tmpPath, htmlContent, 'utf8');
+    await hidden.loadFile(tmpPath);
     await new Promise(resolve => hidden.webContents.once('did-finish-load', resolve));
-    const pdfData = await hidden.webContents.printToPDF({ printBackground: true });
+    const pdfData = await hidden.webContents.printToPDF({ printBackground: true, pageSize: 'A4' });
     hidden.close();
+    try { fs.unlinkSync(tmpPath); } catch(_) {}
     const { filePath, canceled } = await dialog.showSaveDialog({
       defaultPath: defaultName || 'raport.pdf',
       filters: [{ name: 'PDF', extensions: ['pdf'] }]
@@ -89,6 +92,7 @@ ipcMain.handle('win:savePDF', async (event, htmlContent, defaultName) => {
     return true;
   } catch(e) {
     try { hidden.close(); } catch(_) {}
+    try { fs.unlinkSync(tmpPath); } catch(_) {}
     throw e;
   }
 });

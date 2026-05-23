@@ -5,13 +5,12 @@ function renderSettings(){
   const inSt='width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none';
   document.getElementById('content').innerHTML=`
     <div class="sett-card">
-      <h3>Użytkownicy systemu</h3>
+      <h3>${t('settUsers')||'Użytkownicy systemu'}</h3>
       ${users.map(u=>{
         const perms=u.perms||DEFAULT_PERMS;
         const isAdmin=u.role==='admin';
         const cardId='ucard-'+u.id;
         return `<div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);margin-bottom:8px;overflow:hidden">
-          <!-- Header row -->
           <div style="display:flex;align-items:center;padding:10px 12px;gap:8px">
             <div class="uav${isAdmin?' adm':''}" style="width:30px;height:30px;font-size:10px;flex-shrink:0">${initials(u.name)}</div>
             <div style="flex:1">
@@ -19,36 +18,35 @@ function renderSettings(){
                 <span style="font-size:13px;font-weight:600">${u.name}</span>
                 <button onclick="toggleUserCard('${u.id}')" id="ucard-btn-${u.id}" style="height:22px;padding:0 7px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:10px;white-space:nowrap">▼</button>
               </div>
-              <div style="font-size:10px;color:var(--t2)">${isAdmin?'Administrator':'Pracownik'}</div>
+              <div style="font-size:10px;color:var(--t2)">${isAdmin?t('settRoleAdmin')||'Administrator':t('settRoleWorker')||'Pracownik'}</div>
             </div>
-            ${u.id!=='admin'?`<button class="btn" style="height:28px;font-size:11px;background:rgba(232,64,64,.08);color:var(--red);border:1px solid rgba(232,64,64,.2);flex-shrink:0" onclick="delUser('${u.id}')">Usuń</button>`:''}
+            ${u.id!=='admin'?`<button class="btn" style="height:28px;font-size:11px;background:rgba(232,64,64,.08);color:var(--red);border:1px solid rgba(232,64,64,.2);flex-shrink:0" onclick="delUser('${u.id}')">${t('settDelete')||'Usuń'}</button>`:''}
           </div>
-          <!-- Collapsible body -->
           <div id="${cardId}" style="display:none;padding:0 12px 12px;border-top:1px solid var(--bd)">
             ${!isAdmin?`
             <div style="display:flex;gap:6px;align-items:center;margin-top:10px;margin-bottom:10px">
               <input id="uname-${u.id}" value="${u.name}" style="background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:5px 8px;color:var(--t1);font-family:var(--font);font-size:13px;font-weight:600;outline:none;flex:1" onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
-              <button onclick="renameUser('${u.id}')" style="height:30px;padding:0 10px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;flex-shrink:0" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--t2)'">Zmień</button>
+              <button onclick="renameUser('${u.id}')" style="height:30px;padding:0 10px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;flex-shrink:0" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--t2)'">${t('settRename')||'Zmień'}</button>
             </div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)">
-              <div style="font-size:11px;color:var(--t2);flex-shrink:0;min-width:50px">Język:</div>
+              <div style="font-size:11px;color:var(--t2);flex-shrink:0;min-width:50px">${t('settLang')||'Język:'}</div>
               <div style="display:flex;gap:4px;flex:1">
                 <button id="lang-btn-${u.id}-pl" onclick="setUserLang('${u.id}','pl')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${(u.lang||'pl')==='pl'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Polski">🇵🇱</button>
                 <button id="lang-btn-${u.id}-en" onclick="setUserLang('${u.id}','en')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='en'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="English">🇬🇧</button>
                 <button id="lang-btn-${u.id}-uk" onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
               </div>
-              <button onclick="showUserSessions('${u.id}')" style="height:30px;padding:0 8px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">Historia logowań</button>
+              <button onclick="showUserSessions('${u.id}')" style="height:30px;padding:0 8px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">${t('settSessions')||'Historia logowań'}</button>
             </div>
             <div id="user-sessions-${u.id}" style="display:none;background:var(--s3);border-radius:var(--rsm);padding:8px;margin-bottom:10px;max-height:200px;overflow-y:auto"></div>
-            <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Uprawnienia</div>
+            <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">${t('settPerms')||'Uprawnienia'}</div>
             <div class="perm-grid">
               ${[
-                ['viewRentals','Podgląd aktywnych','Widzi aktywne wypożyczenia'],
-                ['addRental','Dodawanie','Może tworzyć wypożyczenia'],
-                ['endRental','Kończenie','Może kończyć wypożyczenia'],
-                ['viewHistory','Historia','Dostęp do historii'],
-                ['viewReport','Raporty','Może generować raporty'],
-                ['viewTracker','Śledzenie','Widzi tracker pojazdów'],
+                ['viewRentals',t('permViewRentals')||'Podgląd aktywnych',t('permSubViewRentals')||'Widzi aktywne wypożyczenia'],
+                ['addRental',t('permAddRental')||'Dodawanie',t('permSubAddRental')||'Może tworzyć wypożyczenia'],
+                ['endRental',t('permEndRental')||'Kończenie',t('permSubEndRental')||'Może kończyć wypożyczenia'],
+                ['viewHistory',t('permViewHistory')||'Historia',t('permSubViewHistory')||'Dostęp do historii'],
+                ['viewReport',t('permViewReport')||'Raporty',t('permSubViewReport')||'Może generować raporty'],
+                ['viewTracker',t('permViewTracker')||'Śledzenie',t('permSubViewTracker')||'Widzi tracker pojazdów'],
               ].map(([key,lbl,sub])=>`
                 <div class="perm-item">
                   <input type="checkbox" class="perm-cb" ${perms[key]?'checked':''} onchange="togglePerm('${u.id}','${key}',this.checked)">
@@ -58,42 +56,42 @@ function renderSettings(){
             ${isAdmin?`
             <div style="margin-top:10px">
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)">
-                <div style="font-size:11px;color:var(--t2);flex-shrink:0;min-width:50px">Język:</div>
+                <div style="font-size:11px;color:var(--t2);flex-shrink:0;min-width:50px">${t('settLang')||'Język:'}</div>
                 <div style="display:flex;gap:4px;flex:1">
                   <button id="lang-btn-${u.id}-pl" onclick="setUserLang('${u.id}','pl')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${(u.lang||'pl')==='pl'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Polski">🇵🇱</button>
                   <button id="lang-btn-${u.id}-en" onclick="setUserLang('${u.id}','en')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='en'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="English">🇬🇧</button>
                   <button id="lang-btn-${u.id}-uk" onclick="setUserLang('${u.id}','uk')" style="flex:1;height:32px;border-radius:var(--rsm);border:2px solid ${u.lang==='uk'?'var(--acc)':'var(--bd)'};background:none;cursor:pointer;font-size:20px;line-height:1;color:var(--t1)" title="Українська">🇺🇦</button>
                 </div>
               </div>
-              <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Zmień hasło administratora</div>
+              <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">${t('settAdminPw')||'Zmień hasło administratora'}</div>
               <div class="fg2">
-                <div class="fr" style="margin-bottom:8px"><label>Nowe hasło</label><input type="password" id="adm-pw1" placeholder="Min. 3 znaki" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
-                <div class="fr" style="margin-bottom:8px"><label>Powtórz hasło</label><input type="password" id="adm-pw2" placeholder="Powtórz" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
+                <div class="fr" style="margin-bottom:8px"><label>${t('settNewPw')||'Nowe hasło'}</label><input type="password" id="adm-pw1" placeholder="${t('pwMin')||'Min. 3 znaki'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
+                <div class="fr" style="margin-bottom:8px"><label>${t('settRepeatPw')||'Powtórz hasło'}</label><input type="password" id="adm-pw2" placeholder="${t('settRepeatPw')||'Powtórz'}" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:7px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
               </div>
               <div id="adm-pw-msg" style="font-size:11px;min-height:14px;margin-bottom:6px"></div>
-              <button class="btn btn-p" onclick="saveAdminPw()" style="width:auto;padding:0 14px;height:30px;font-size:11px">Zapisz hasło</button>
+              <button class="btn btn-p" onclick="saveAdminPw()" style="width:auto;padding:0 14px;height:30px;font-size:11px">${t('settSavePw')||'Zapisz hasło'}</button>
             </div>`:''}
           </div>
         </div>`;
       }).join('')}
       <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end">
-        <div style="flex:1"><input id="new-uname" placeholder="Imię i nazwisko nowego pracownika" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
-        <button class="btn btn-p" style="flex:none;width:auto;padding:0 14px;height:30px;font-size:11px" onclick="addUser()">Dodaj pracownika</button>
+        <div style="flex:1"><input id="new-uname" placeholder="${t('settUserPh')||'Imię i nazwisko nowego pracownika'}" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:8px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none"></div>
+        <button class="btn btn-p" style="flex:none;width:auto;padding:0 14px;height:30px;font-size:11px" onclick="addUser()">${t('settAddUser')||'Dodaj pracownika'}</button>
       </div>
     </div>
 
     <div class="sett-card">
-      <h3 style="display:flex;align-items:center;justify-content:space-between">Cennik <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-prices')">Edytuj →</button></h3>
+      <h3 style="display:flex;align-items:center;justify-content:space-between">${t('settPrices')||'Cennik'} <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-prices')">${t('settPricesEdit')||'Edytuj →'}</button></h3>
     </div>
 
     <div class="sett-card">
-      <h3 style="display:flex;align-items:center;justify-content:space-between">Sprzęt <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} pojazdów</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">Zarządzaj →</button></h3>
+      <h3 style="display:flex;align-items:center;justify-content:space-between">${t('settEquip')||'Sprzęt'} <span style="font-size:12px;color:var(--t2);font-weight:400">${FLEET.length} pojazdów</span> <button class="btn btn-g" style="height:26px;padding:0 12px;font-size:11px" onclick="showV('settings-equipment')">${t('settEquipManage')||'Zarządzaj →'}</button></h3>
     </div>
 
     <div class="sett-card">
       <details>
         <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:12px;border-bottom:1px solid var(--bd)">
-          Konfiguracja raportu dziennego
+          ${t('settReportCfg')||'Konfiguracja raportu dziennego'}
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
         <div style="margin-top:12px">
@@ -123,19 +121,19 @@ function renderSettings(){
     <div class="sett-card">
       <details>
         <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
-          Kopia zapasowa danych
+          ${t('settBackup')||'Kopia zapasowa danych'}
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
         <div style="margin-top:12px">
-          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">${t('settBackupDesc')||'Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.'}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Eksportuj dane
+              ${t('settExport')||'Eksportuj dane'}
             </button>
             <button class="btn btn-g" onclick="importAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Importuj dane
+              ${t('settImport')||'Importuj dane'}
             </button>
           </div>
           <div id="backup-msg" style="font-size:11px;color:var(--t3);margin-top:8px"></div>
@@ -196,19 +194,19 @@ function renderSettingsUser(){
     <div class="sett-card">
       <details>
         <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;list-style:none;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:0;border-bottom:1px solid transparent">
-          Kopia zapasowa danych
+          ${t('settBackup')||'Kopia zapasowa danych'}
           <span style="font-size:10px;color:var(--t3)">▼</span>
         </summary>
         <div style="margin-top:12px">
-          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:12px">${t('settBackupDesc')||'Eksportuj lub importuj wszystkie dane: wypożyczenia, użytkowników, sprzęt, ceny, zadania i ustawienia.'}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Eksportuj dane
+              ${t('settExport')||'Eksportuj dane'}
             </button>
             <button class="btn btn-g" onclick="importAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Importuj dane
+              ${t('settImport')||'Importuj dane'}
             </button>
           </div>
           <div id="backup-msg" style="font-size:11px;color:var(--t3);margin-top:8px"></div>
@@ -249,7 +247,12 @@ function setUserLang(uid,lang){
   const u=users.find(x=>x.id===uid);if(!u)return;
   u.lang=lang;
   IAPI.saveUsers(users);
-  if(currentUser&&u.id===currentUser.id){currentUser.lang=lang;applyLang();}
+  if(currentUser&&u.id===currentUser.id){
+    currentUser.lang=lang;
+    applyLang();
+    if(currentView==='settings')renderSettings();
+    return;
+  }
   ['pl','en','uk'].forEach(l=>{
     const btn=document.getElementById('lang-btn-'+uid+'-'+l);
     if(btn)btn.style.borderColor=l===lang?'var(--acc)':'var(--bd)';
