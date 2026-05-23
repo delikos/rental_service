@@ -813,11 +813,6 @@ async function init(){
   }catch(e){}
   renderLogin();
   renderCennikPanel();
-  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.focusWindow)
-    setTimeout(()=>{
-      window.electronAPI.focusWindow();
-      setTimeout(()=>{const inp=document.getElementById('login-pw-input');if(inp)inp.focus();},300);
-    },500);
 }
 
 // ═══ BACKUP ENCRYPTION (AES-256-GCM via SubtleCrypto) ═══
@@ -1336,6 +1331,8 @@ document.querySelectorAll('.overlay').forEach(el=>{el.addEventListener('click',e
 <script>
 setInterval(()=>{if(currentView==='rentals'&&currentUser)renderRentals();},20000);
 init();
+if(typeof window.electronAPI!=='undefined'&&window.electronAPI.forceFocusWindow)
+  setTimeout(()=>window.electronAPI.forceFocusWindow(),800);
 </script>
 </body>
 </html>

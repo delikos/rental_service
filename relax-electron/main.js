@@ -39,7 +39,49 @@ function exec(sql, params) {
   return res.length ? res[0].values : [];
 }
 
-// ── Auto backup (max 5 files) ─────────────────────────────────────
+// ── ZipCrypto (PKZIP traditional encryption) ─────────────────────
+const _CRCT = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) { let c = i; for (let j = 0; j < 8; j++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[i] = c >>> 0; }
+  return t;
+})();
+function _zipCrc32(buf, c = 0xFFFFFFFF) {
+  for (let i = 0; i < buf.length; i++) c = _CRCT[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function buildEncryptedZip(filename, jsonStr, password) {
+  const data = Buffer.from(jsonStr, 'utf8');
+  const fileCRC = _zipCrc32(data);
+  const pw = password || '1234';
+  const k = new Uint32Array([305419896, 591751049, 878082192]);
+  function upd(b) {
+    k[0] = (_CRCT[(k[0] ^ b) & 0xFF] ^ (k[0] >>> 8)) >>> 0;
+    k[1] = (k[1] + (k[0] & 0xFF)) >>> 0;
+    k[1] = (Math.imul(k[1], 134775813) + 1) >>> 0;
+    k[2] = (_CRCT[(k[2] ^ (k[1] >>> 24)) & 0xFF] ^ (k[2] >>> 8)) >>> 0;
+  }
+  function encByte(b) { const t = (k[2] | 2) & 0xFFFF; const e = ((t * (t ^ 1)) >>> 8 & 0xFF) ^ b; upd(b); return e; }
+  for (let i = 0; i < pw.length; i++) upd(pw.charCodeAt(i));
+  const hdrPlain = Buffer.alloc(12);
+  for (let i = 0; i < 11; i++) hdrPlain[i] = (Math.random() * 256) | 0;
+  hdrPlain[11] = (fileCRC >>> 24) & 0xFF;
+  const eHdr = Buffer.alloc(12); for (let i = 0; i < 12; i++) eHdr[i] = encByte(hdrPlain[i]);
+  const eData = Buffer.alloc(data.length); for (let i = 0; i < data.length; i++) eData[i] = encByte(data[i]);
+  const payload = Buffer.concat([eHdr, eData]);
+  const fn = Buffer.from(filename, 'utf8');
+  const now = new Date();
+  const dt = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  const tm = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const u16 = n => { const b = Buffer.alloc(2); b.writeUInt16LE(n & 0xFFFF); return b; };
+  const u32 = n => { const b = Buffer.alloc(4); b.writeUInt32LE(n >>> 0); return b; };
+  const lhdr = Buffer.concat([Buffer.from([0x50,0x4B,0x03,0x04]),u16(0x14),u16(1),u16(0),u16(tm),u16(dt),u32(fileCRC),u32(payload.length),u32(data.length),u16(fn.length),u16(0),fn]);
+  const cdOff = lhdr.length + payload.length;
+  const cd = Buffer.concat([Buffer.from([0x50,0x4B,0x01,0x02]),u16(0x3F),u16(0x14),u16(1),u16(0),u16(tm),u16(dt),u32(fileCRC),u32(payload.length),u32(data.length),u16(fn.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(0),fn]);
+  const eocd = Buffer.concat([Buffer.from([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(1),u16(1),u32(cd.length),u32(cdOff),u16(0)]);
+  return Buffer.concat([lhdr, payload, cd, eocd]);
+}
+
+// ── Auto backup (max 10 files) ────────────────────────────────────
 function createAutoBackup() {
   try {
     if (!db || !fs.existsSync(dbPath)) return;
@@ -48,12 +90,35 @@ function createAutoBackup() {
     const now = new Date();
     const p = n => String(n).padStart(2, '0');
     const ts = `${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+
+    // 1. DB snapshot
     fs.copyFileSync(dbPath, path.join(backupDir, `backup_${ts}.db`));
-    const files = fs.readdirSync(backupDir)
-      .filter(f => f.startsWith('backup_') && f.endsWith('.db'))
-      .sort();
-    files.slice(0, Math.max(0, files.length - 5))
-      .forEach(f => { try { fs.unlinkSync(path.join(backupDir, f)); } catch(_) {} });
+
+    // 2. Encrypted ZIP of all data
+    try {
+      const rentals  = exec('SELECT data FROM rentals' ).map(r => JSON.parse(r[0]));
+      const userRows = exec('SELECT data FROM users'   ).map(r => JSON.parse(r[0]));
+      const sessions = exec('SELECT data FROM sessions').map(r => JSON.parse(r[0]));
+      const backup = { version: 2, exportedAt: Date.now(), rl2_r: rentals, rl2_u: userRows, rl2_sessions: sessions };
+      const kvKeys = ['rl2_fleet','rl2_custom_prices','rl2_prices','rl2_tasks','rl2_report_categories','rl2_pdf_fields','rl2_theme'];
+      for (const key of kvKeys) {
+        const rows = exec('SELECT value FROM kv WHERE key=?', [key]);
+        if (rows.length) { try { backup[key] = JSON.parse(rows[0][0]); } catch(_) {} }
+      }
+      const pwRows = exec('SELECT value FROM kv WHERE key=?', ['rl2_export_pw']);
+      const exportPw = pwRows.length ? (JSON.parse(pwRows[0][0]) || '1234') : '1234';
+      const zipData = buildEncryptedZip(`relax_backup_${ts}.json`, JSON.stringify(backup), exportPw);
+      fs.writeFileSync(path.join(backupDir, `backup_${ts}.zip`), zipData);
+    } catch(e) { console.error('ZIP backup error:', e); }
+
+    // 3. Rotate — keep max 10 of each extension
+    for (const ext of ['.db', '.zip']) {
+      const files = fs.readdirSync(backupDir)
+        .filter(f => f.startsWith('backup_') && f.endsWith(ext))
+        .sort();
+      files.slice(0, Math.max(0, files.length - 10))
+        .forEach(f => { try { fs.unlinkSync(path.join(backupDir, f)); } catch(_) {} });
+    }
   } catch(e) { console.error('Auto backup error:', e); }
 }
 
@@ -169,6 +234,34 @@ ipcMain.on('focus-window', () => {
   mainWindow.focus();
   mainWindow.setAlwaysOnTop(false);
   mainWindow.webContents.focus();
+});
+
+ipcMain.on('force-focus-window', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.setVisibleOnAllWorkspaces(true);
+  setTimeout(() => {
+    mainWindow.focus();
+    mainWindow.moveTop();
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    setTimeout(() => {
+      mainWindow.setAlwaysOnTop(false);
+      mainWindow.setVisibleOnAllWorkspaces(false);
+      mainWindow.webContents.focus();
+      mainWindow.webContents.executeJavaScript(`
+        setTimeout(() => {
+          const el = document.getElementById('login-pw-input');
+          if(el){el.removeAttribute('disabled');el.blur();el.focus();el.click();}
+        }, 150);
+      `).catch(() => {});
+    }, 250);
+  }, 100);
+});
+
+ipcMain.on('app:relaunch', () => {
+  app.relaunch();
+  app.exit();
 });
 
 ipcMain.handle('auth:hashPw', (_, pw) => {

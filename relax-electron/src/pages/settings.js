@@ -160,8 +160,13 @@ function saveExportPw(){
   const msg=document.getElementById('export-pw-msg');
   if(!inp)return;
   const pw=inp.value;
-  if(pw.length>0){localStorage.setItem('rl2_export_pw',pw);}
-  else{localStorage.removeItem('rl2_export_pw');}
+  if(pw.length>0){
+    localStorage.setItem('rl2_export_pw',pw);
+    if(window.electronAPI?.kvSet)window.electronAPI.kvSet('rl2_export_pw',JSON.stringify(pw)).catch(()=>{});
+  } else {
+    localStorage.removeItem('rl2_export_pw');
+    if(window.electronAPI?.kvSet)window.electronAPI.kvSet('rl2_export_pw',JSON.stringify('')).catch(()=>{});
+  }
   if(msg){
     msg.textContent=pw.length>0?(t('settExportPwSet')||'Hasło eksportu ustawione.'):(t('settExportPwClear')||'Hasło eksportu wyczyszczone.');
     msg.style.color='var(--green)';
@@ -886,8 +891,8 @@ function importAllData(){
       if(Array.isArray(data.rl2_sessions))await IAPI.saveSessions(data.rl2_sessions);
       const kvKeys=['rl2_fleet','rl2_custom_prices','rl2_prices','rl2_tasks','rl2_report_categories','rl2_pdf_fields','rl2_theme'];
       for(const k of kvKeys){if(data[k]!==undefined&&data[k]!==null){try{await IAPI._kvSet(k,data[k]);}catch(e){}}}
-      if(msg){msg.textContent='✓ Import zakończony — ponowne ładowanie...';msg.style.color='var(--green)';}
-      setTimeout(()=>window.location.reload(),800);
+      if(msg){msg.textContent='✓ Import zakończony — ponowne uruchamianie...';msg.style.color='var(--green)';}
+      setTimeout(()=>{if(window.electronAPI?.relaunch)window.electronAPI.relaunch();else window.location.reload();},800);
     }catch(e){if(msg){msg.textContent='Błąd importu: '+e.message;msg.style.color='var(--red)';}}
   };
   inp.click();
