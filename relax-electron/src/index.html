@@ -802,6 +802,12 @@ async function init(){
     users=[{id:'admin',name:'Admin',role:'admin'},{id:'u1',name:'Pracownik 1',role:'user'}];
     sessions=[];
   }
+  // Re-load fleet and prices from localStorage after IAPI.getData() may have synced
+  // fresh data from SQLite → localStorage (e.g. after import+relaunch).
+  // Without this, FLEET still holds the value from script-load time and the
+  // cleanup below would incorrectly delete valid custom price entries.
+  loadFleet();
+  loadPrices();
   // Clean stale custom types that have no FLEET vehicles
   try{
     const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
@@ -929,15 +935,28 @@ function calcSurcharge(r,now){
 }
 function vSur(v,overMs){
   const overMin=overMs/60000;
-  if(overMin<SURCHARGE.graceMin)return 0;
   if(v.vtype==='gokart'){
-    const periods=Math.ceil(overMin/60);
-    return periods*SURCHARGE.kartHour;
-  } else {
+    if(overMin<SURCHARGE.graceMin)return 0;
+    return Math.ceil(overMin/60)*SURCHARGE.kartHour;
+  }
+  if(v.vtype==='rower'){
+    if(overMin<SURCHARGE.graceMin)return 0;
     if(overMin<=60)return SURCHARGE.bikeUpto1h;
     if(overMin<=180)return SURCHARGE.bikeUpto3h;
     return SURCHARGE.bikeUpto3h+Math.ceil((overMin-180)/60)*SURCHARGE.bikePerHour;
   }
+  // Custom type — look up the specific surcharge configured for this model
+  try{
+    const cp=JSON.parse(localStorage.getItem('rl2_custom_prices')||'{}');
+    const entry=(cp[v.vtype]||[]).find(e=>e.name.toLowerCase()===(v.vmodel||'').toLowerCase());
+    if(entry&&Array.isArray(entry.surcharges)&&entry.surcharges.length){
+      const s=entry.surcharges[0];
+      const grace=s.graceMin!=null?s.graceMin:SURCHARGE.graceMin;
+      if(overMin<grace)return 0;
+      return Math.ceil(overMin/60)*s.perHour;
+    }
+  }catch(e){}
+  return 0;
 }
 
 function getStatus(r,now){
