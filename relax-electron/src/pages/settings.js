@@ -138,7 +138,7 @@ function renderSettings(){
               <input type="password" id="export-pw-input" value="${localStorage.getItem('rl2_export_pw')||''}" placeholder="••••••••" style="flex:1;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:6px 10px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none">
               <button onclick="saveExportPw()" style="height:30px;padding:0 12px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s3);color:var(--t2);cursor:pointer;font-size:11px;white-space:nowrap">${t('settExportPwSave')||'Zapisz'}</button>
             </div>
-            <div id="export-pw-msg" style="font-size:10px;color:var(--t3);margin-top:4px">${t('settExportPwHint')||'Gdy hasło jest ustawione, eksport będzie zaszyfrowany (.rlx).'}</div>
+            <div id="export-pw-msg" style="font-size:10px;color:var(--t3);margin-top:4px">${t('settExportPwHint')||'Eksport zawsze tworzy zaszyfrowany plik .zip. Domyślne hasło: 1234.'}</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g" onclick="exportAllData()" style="width:auto;padding:0 14px;height:30px;font-size:11px;display:flex;align-items:center;gap:6px">
@@ -389,7 +389,6 @@ function renderSettingsEquipment(){
         </div>
         <!-- Surcharges section -->
         <div style="background:var(--s2);border-radius:var(--rsm);overflow:hidden">
-          <div style="background:#191919;padding:5px 8px;font-size:10px;font-weight:800;color:#fff;text-align:center;letter-spacing:.06em;text-transform:uppercase;border-top:2px solid #c96a10">${t('cpDoplataLbl')||'DOPŁATY'}</div>
           <div id="eq-sur-list">
             <div class="eq-sur-row" style="display:grid;grid-template-columns:1fr 1fr 26px;gap:5px;align-items:center;padding:6px 8px;border-top:1px solid var(--bd)">
               <input class="eq-sur-grace" type="number" min="0" style="width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rsm);padding:5px 8px;color:var(--t1);font-family:var(--mono);font-size:11px;outline:none">
@@ -563,6 +562,9 @@ function addFleetVehicle(){
     const durVals=allDurSels.map(s=>s.value);
     if(durVals.length!==new Set(durVals).size){if(errEl)errEl.textContent='Nie można dodać dwóch takich samych okresów.';return;}
   }
+  // Validate duplicate surcharge grace periods
+  const surGraces=Array.from(document.querySelectorAll('.eq-sur-grace')).map(el=>el.value||'0');
+  if(surGraces.length>1&&surGraces.length!==new Set(surGraces).size){if(errEl)errEl.textContent='Nie można dodać dwóch takich samych okresów dopłaty.';return;}
   const hasSurcharge=document.querySelectorAll('.eq-sur-row').length>0&&Array.from(document.querySelectorAll('.eq-sur-price')).some(el=>parseInt(el.value)>0);
   if(isNewModel||hasPriceInput||hasSurcharge){
     const p30=parseInt(document.getElementById('eq-price30')?.value)||0;
@@ -687,7 +689,7 @@ function renderSettingsPrices(){
             <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">${e.name.toUpperCase()}</div>
             <div style="background:var(--s2);border-radius:3px;overflow:hidden">
               ${hdr('1fr 68px')}<div></div><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;text-align:center">${_surDoplataHdr}</div></div>
-              ${surs.map((s,si)=>row('1fr 68px',`<div style="font-size:11px;color:var(--t2);padding-left:2px">Po ${s.graceMin||0} min</div>${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
+              ${surs.map((s,si)=>row('1fr 68px',`<div style="font-size:11px;color:#fff;padding-left:2px">Po ${s.graceMin||0} min</div>${cell('ctsur-'+type+'-'+ei+'-ph-'+si,s.perHour||0,'zł','1')}`)).join('')}
             </div>
           </div>`;
         }).join('')}
@@ -838,17 +840,12 @@ async function exportAllData(){
     const json=JSON.stringify(backup,null,2);
     const today=new Date();
     const ds=`${p2(today.getDate())}_${p2(today.getMonth()+1)}_${today.getFullYear()}`;
-    const storedPw=localStorage.getItem('rl2_export_pw')||'';
+    const storedPw=localStorage.getItem('rl2_export_pw')||'1234';
+    const zipData=_createEncryptedZip(`relax_backup_${ds}.json`,json,storedPw);
+    const blob=new Blob([zipData],{type:'application/zip'});
     const a=document.createElement('a');
-    if(storedPw.length>0){
-      const encrypted=await _rlxEncrypt(json,storedPw);
-      const blob=new Blob([encrypted],{type:'application/octet-stream'});
-      a.href=URL.createObjectURL(blob);
-      a.download=`relax_backup_${ds}.rlx`;
-    } else {
-      a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
-      a.download=`relax_backup_${ds}.json`;
-    }
+    a.href=URL.createObjectURL(blob);
+    a.download=`relax_backup_${ds}.zip`;
     document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);if(a.href.startsWith('blob:'))URL.revokeObjectURL(a.href);},500);
     if(msg){msg.textContent=t('settExportOk')||'✓ Eksport gotowy';msg.style.color='var(--green)';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
   }catch(e){if(msg){msg.textContent='Błąd eksportu: '+e.message;msg.style.color='var(--red)';}}
@@ -857,12 +854,18 @@ async function exportAllData(){
 function importAllData(){
   const msg=document.getElementById('backup-msg');
   const inp=document.createElement('input');
-  inp.type='file';inp.accept='.json,.rlx';
+  inp.type='file';inp.accept='.json,.zip,.rlx';
   inp.onchange=async function(ev){
     const file=ev.target.files[0];if(!file)return;
     try{
       let data;
-      if(file.name.endsWith('.rlx')){
+      if(file.name.endsWith('.zip')){
+        const buf=await file.arrayBuffer();
+        const bytes=new Uint8Array(buf);
+        const storedPw=localStorage.getItem('rl2_export_pw')||'1234';
+        try{const plain=_readEncryptedZip(bytes,storedPw);data=JSON.parse(plain);}
+        catch(e){if(msg){msg.textContent=t('backupDecryptFailed')||'Błędne hasło lub uszkodzony plik ZIP.';msg.style.color='var(--red)';}return;}
+      } else if(file.name.endsWith('.rlx')){
         const buf=await file.arrayBuffer();
         const bytes=new Uint8Array(buf);
         const storedPw=localStorage.getItem('rl2_export_pw')||'';

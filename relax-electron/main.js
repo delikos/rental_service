@@ -152,6 +152,11 @@ ipcMain.handle('win:focus', (event) => {
   if (win && !win.isDestroyed()) { win.show(); win.focus(); }
 });
 
+ipcMain.on('focus-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.focus(); }
+});
+
 ipcMain.handle('auth:hashPw', (_, pw) => {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512').toString('hex');

@@ -231,7 +231,7 @@ body.cp-open.sb-cp .rrow{grid-template-columns:150px minmax(0,1fr) 80px 183px 90
 .add-vbtn{width:100%;height:30px;border-radius:var(--rsm);border:1px dashed var(--bd2);background:none;color:var(--t2);cursor:pointer;font-size:11px;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;}
 .add-vbtn:hover{border-color:var(--acc);color:var(--acc);}
 #rl-print-frame{display:none;}
-@media print{body>*{display:none!important;}#rl-print-frame{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;z-index:99999;padding:0;}}
+@media print{body{background:#fff!important;}body>*{display:none!important;}#rl-print-frame{display:block!important;position:static!important;width:100%;background:#fff;padding:0;margin:0;}}
 .pay-row{display:flex;gap:6px;margin-bottom:9px;}
 .pay-btn{flex:1;height:34px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--s2);color:var(--t2);font-family:var(--font);font-size:12px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;}
 .pay-btn.sel{border-color:var(--acc);background:var(--acc-dim);color:var(--acc);}
@@ -498,7 +498,7 @@ var LANGS={
     cpAfterTime:'PO CZASIE',
     settKarts:'Gokarty',settBikes:'Rowery',settSaveKarts:'Zapisz gokarty',settSaveBikes:'Zapisz rowery',
     settSurTitle:'Ustawienia dopłat',settSurCommon:'Wspólne',settSurGrace:'Czas bez dopłaty',settSurDoplata:'Dopłata',
-    settSurKartH:'Dopłata / godz.',settSurBike1:'Do 1h',settSurBike3:'Do 3h',settSurBikeH:'Każda nast. godz.',
+    settSurKartH:'Dopłata / godz.',settSurBike1:'Do 1h',settSurBike3:'Do 3h',settSurBikeH:'Każda następna godzina',
     settEquipAddNew:'Dodaj nowy pojazd',settEquipTypeLbl:'Typ pojazdu',settEquipModelLbl:'Model / Nazwa',settEquipNumLbl:'Numer',
     settEquipPricesHdr:'CENY',settEquipPeriodHdr:'OKRES',settEquipAddVehicle:'Dodaj pojazd',
     settEquipListTitle:'Lista sprzętu',settEquipDragHint:'przeciągnij żeby zmienić kolejność',
@@ -511,7 +511,7 @@ var LANGS={
     settSave:'Zapisz',settNoPrices:'brak cen',settEquipNoPricesHint:'Dodaj pojazdy z cenami w',
     settEquipTypePh:'np. Gokart, Rower, Motorower...',settEquipModelPh:'np. Maluch, Kajak...',
     settEquipPriceHint:'Zostaw puste jeśli nie chcesz teraz.',
-    settChangeAdminPw:'Zmień hasło',durHour:'godz.',settSessions:'sesji',settSaveSur:'Zapisz dopłaty',settExportPwLbl:'Hasło do eksportu danych',settExportPwSave:'Zapisz hasło eksportu',settExportPwSet:'Hasło eksportu ustawione.',settExportPwClear:'Hasło eksportu wyczyszczone.',settExportPwHint:'Gdy hasło jest ustawione, eksport będzie zaszyfrowany (.rlx). Przy imporcie użyj tego samego hasła.',
+    settChangeAdminPw:'Zmień hasło',durHour:'godz.',settSessions:'sesji',settSaveSur:'Zapisz dopłaty',settExportPwLbl:'Hasło do eksportu danych',settExportPwSave:'Zapisz hasło eksportu',settExportPwSet:'Hasło eksportu ustawione.',settExportPwClear:'Hasło eksportu wyczyszczone.',settExportPwHint:'Eksport zawsze tworzy zaszyfrowany plik .zip. Domyślne hasło: 1234.',
     backupPwPrompt:'Hasło administratora (puste = eksport bez szyfrowania):',
     backupPwWrong:'Błędne hasło — eksport anulowany.',
     backupDecryptPw:'Hasło do odszyfrowania:',
@@ -556,7 +556,7 @@ var LANGS={
     settSave:'Save',settNoPrices:'no prices',settEquipNoPricesHint:'Add vehicles with prices in',
     settEquipTypePh:'e.g. Go-kart, Bike...',settEquipModelPh:'e.g. Maluch, Kayak...',
     settEquipPriceHint:'Leave empty if you don\'t want to set now.',
-    settChangeAdminPw:'Change password',durHour:'hr',settSessions:'sessions',settSaveSur:'Save surcharges',settExportPwLbl:'Export password',settExportPwSave:'Save export password',settExportPwSet:'Export password saved.',settExportPwClear:'Export password cleared.',settExportPwHint:'When set, exports will be encrypted (.rlx). Use the same password when importing.',
+    settChangeAdminPw:'Change password',durHour:'hr',settSessions:'sessions',settSaveSur:'Save surcharges',settExportPwLbl:'Export password',settExportPwSave:'Save export password',settExportPwSet:'Export password saved.',settExportPwClear:'Export password cleared.',settExportPwHint:'Exports always create an encrypted .zip file. Default password: 1234.',
     backupPwPrompt:'Admin password (empty = export without encryption):',
     backupPwWrong:'Wrong password — export cancelled.',
     backupDecryptPw:'Password to decrypt:',
@@ -588,7 +588,7 @@ var LANGS={
     cpAfterTime:'ПОНАД ЧАС',
     settKarts:'Картинги',settBikes:'Велосипеди',settSaveKarts:'Зберегти картинги',settSaveBikes:'Зберегти велосипеди',
     settSurTitle:'Налаштування доплат',settSurCommon:'Загальні',settSurGrace:'Час без доплати',settSurDoplata:'Доплата',
-    settSurKartH:'Доплата / год.',settSurBike1:'До 1 год.',settSurBike3:'До 3 год.',settSurBikeH:'Кожна наст. год.',
+    settSurKartH:'Доплата / год.',settSurBike1:'До 1 год.',settSurBike3:'До 3 год.',settSurBikeH:'Кожна наступна година',
     settEquipAddNew:'Додати новий транспорт',settEquipTypeLbl:'Тип транспорту',settEquipModelLbl:'Модель / Назва',settEquipNumLbl:'Номер',
     settEquipPricesHdr:'ЦІНИ',settEquipPeriodHdr:'ТЕРМІН',settEquipAddVehicle:'Додати транспорт',
     settEquipListTitle:'Список обладнання',settEquipDragHint:'перетягніть для зміни порядку',
@@ -601,7 +601,7 @@ var LANGS={
     settSave:'Зберегти',settNoPrices:'немає цін',settEquipNoPricesHint:'Додайте транспорт з цінами у',
     settEquipTypePh:'напр. Картинг, Велосипед...',settEquipModelPh:'напр. Малюк, Каяк...',
     settEquipPriceHint:'Залиште порожнім, якщо не хочете зараз.',
-    settChangeAdminPw:'Змінити пароль',durHour:'год.',settSessions:'сеансів',settSaveSur:'Зберегти доплати',settExportPwLbl:'Пароль для експорту',settExportPwSave:'Зберегти пароль',settExportPwSet:'Пароль збережено.',settExportPwClear:'Пароль очищено.',settExportPwHint:'Якщо пароль встановлено, експорт буде зашифровано (.rlx). При імпорті використовуйте той самий пароль.',
+    settChangeAdminPw:'Змінити пароль',durHour:'год.',settSessions:'сеансів',settSaveSur:'Зберегти доплати',settExportPwLbl:'Пароль для експорту',settExportPwSave:'Зберегти пароль',settExportPwSet:'Пароль збережено.',settExportPwClear:'Пароль очищено.',settExportPwHint:'Експорт завжди створює зашифрований файл .zip. Стандартний пароль: 1234.',
     backupPwPrompt:'Пароль адміністратора (порожньо = без шифрування):',
     backupPwWrong:'Невірний пароль — експорт скасовано.',
     backupDecryptPw:'Пароль для розшифрування:',
@@ -792,9 +792,6 @@ let _inactivityTimer=null;
 );
 
 async function init(){
-  // Restore OS focus after reload (fixes login freeze on Windows)
-  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.focus)
-    setTimeout(()=>window.electronAPI.focus(),200);
   try{
     const d=await IAPI.getData();
     rentals=Array.isArray(d.rentals)?d.rentals:[];
@@ -816,6 +813,8 @@ async function init(){
   }catch(e){}
   renderLogin();
   renderCennikPanel();
+  if(typeof window.electronAPI!=='undefined'&&window.electronAPI.focus)
+    setTimeout(()=>{window.electronAPI.focus();const inp=document.getElementById('login-pw-input');if(inp)inp.focus();},300);
 }
 
 // ═══ BACKUP ENCRYPTION (AES-256-GCM via SubtleCrypto) ═══
@@ -837,6 +836,63 @@ async function _rlxDecrypt(bytes, password){
   const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes.slice(4,20),iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['decrypt']);
   try{const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(20,32)},key,bytes.slice(32));return new TextDecoder().decode(plain);}
   catch{return null;}
+}
+
+// ═══ ZIP CRYPTO (PKZIP traditional encryption — openable in Windows/7-Zip/WinRAR) ═══
+function _createEncryptedZip(filename,jsonStr,password){
+  const T=new Uint32Array(256);
+  for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?0xEDB88320^c>>>1:c>>>1;T[i]=c>>>0;}
+  const crc32=(buf,c=0xFFFFFFFF)=>{for(let i=0;i<buf.length;i++)c=T[(c^buf[i])&0xFF]^c>>>8;return(c^0xFFFFFFFF)>>>0;};
+  function mkCtx(pw){
+    const k=new Uint32Array([305419896,591751049,878082192]);
+    function upd(b){k[0]=(T[(k[0]^b)&0xFF]^k[0]>>>8)>>>0;k[1]=(k[1]+(k[0]&0xFF))>>>0;k[1]=(Math.imul(k[1],134775813)+1)>>>0;k[2]=(T[(k[2]^k[1]>>>24)&0xFF]^k[2]>>>8)>>>0;}
+    for(let i=0;i<pw.length;i++)upd(pw.charCodeAt(i));
+    return{k,upd};
+  }
+  function encByte(ctx,b){const t=(ctx.k[2]|2)&0xFFFF;const e=((t*(t^1))>>>8&0xFF)^b;ctx.upd(b);return e;}
+  const data=new TextEncoder().encode(jsonStr);
+  const fileCRC=crc32(data);
+  const pw=password||'1234';
+  const ctx=mkCtx(pw);
+  const hdr=new Uint8Array(12);
+  for(let i=0;i<11;i++)hdr[i]=Math.random()*256|0;
+  hdr[11]=fileCRC>>>24&0xFF;
+  const eHdr=new Uint8Array(12);for(let i=0;i<12;i++)eHdr[i]=encByte(ctx,hdr[i]);
+  const eData=new Uint8Array(data.length);for(let i=0;i<data.length;i++)eData[i]=encByte(ctx,data[i]);
+  const payload=new Uint8Array(12+data.length);payload.set(eHdr);payload.set(eData,12);
+  const fn=new TextEncoder().encode(filename);
+  const now=new Date();
+  const dt=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+  const tm=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+  const u16=n=>[n&0xFF,n>>>8&0xFF];
+  const u32=n=>[n&0xFF,n>>>8&0xFF,n>>>16&0xFF,n>>>24&0xFF];
+  const lhdr=[0x50,0x4B,0x03,0x04,0x14,0x00,0x01,0x00,0x00,0x00,...u16(tm),...u16(dt),...u32(fileCRC),...u32(payload.length),...u32(data.length),...u16(fn.length),0x00,0x00,...fn];
+  const cdOff=lhdr.length+payload.length;
+  const cd=[0x50,0x4B,0x01,0x02,0x3F,0x00,0x14,0x00,0x01,0x00,0x00,0x00,...u16(tm),...u16(dt),...u32(fileCRC),...u32(payload.length),...u32(data.length),...u16(fn.length),0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,...u32(0),...fn];
+  const eocd=[0x50,0x4B,0x05,0x06,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,...u32(cd.length),...u32(cdOff),0x00,0x00];
+  const zip=new Uint8Array(lhdr.length+payload.length+cd.length+eocd.length);
+  let off=0;zip.set(lhdr,off);off+=lhdr.length;zip.set(payload,off);off+=payload.length;zip.set(cd,off);off+=cd.length;zip.set(eocd,off);
+  return zip;
+}
+function _readEncryptedZip(bytes,password){
+  if(bytes[0]!==0x50||bytes[1]!==0x4B||bytes[2]!==0x03||bytes[3]!==0x04)throw new Error('Not a ZIP file');
+  const flag=bytes[6]|(bytes[7]<<8);
+  const uncompSize=bytes[22]|(bytes[23]<<8)|(bytes[24]<<16)|(bytes[25]<<24);
+  const fnLen=bytes[26]|(bytes[27]<<8);
+  const extraLen=bytes[28]|(bytes[29]<<8);
+  const dataStart=30+fnLen+extraLen;
+  if(!(flag&0x01))return new TextDecoder().decode(bytes.slice(dataStart,dataStart+uncompSize));
+  const T=new Uint32Array(256);
+  for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?0xEDB88320^c>>>1:c>>>1;T[i]=c>>>0;}
+  const k=new Uint32Array([305419896,591751049,878082192]);
+  function upd(b){k[0]=(T[(k[0]^b)&0xFF]^k[0]>>>8)>>>0;k[1]=(k[1]+(k[0]&0xFF))>>>0;k[1]=(Math.imul(k[1],134775813)+1)>>>0;k[2]=(T[(k[2]^k[1]>>>24)&0xFF]^k[2]>>>8)>>>0;}
+  function decByte(e){const t=(k[2]|2)&0xFFFF;const b=((t*(t^1))>>>8&0xFF)^e;upd(b);return b;}
+  const pw=password||'1234';
+  for(let i=0;i<pw.length;i++)upd(pw.charCodeAt(i));
+  for(let i=0;i<12;i++)decByte(bytes[dataStart+i]);
+  const plain=new Uint8Array(uncompSize);
+  for(let i=0;i<uncompSize;i++)plain[i]=decByte(bytes[dataStart+12+i]);
+  return new TextDecoder().decode(plain);
 }
 
 // ═══ UTILS ═══

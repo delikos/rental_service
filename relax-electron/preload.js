@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   kvSet:        (key, val)  => ipcRenderer.invoke('db:kvSet', key, val),
   generatePDF:  (name)      => ipcRenderer.invoke('win:generatePDF', name),
   savePDF:      (html, name)=> ipcRenderer.invoke('win:savePDF', html, name),
-  focus:        ()          => ipcRenderer.invoke('win:focus'),
+  focus:        ()          => ipcRenderer.send('focus-window'),
   hashPw:       (pw)        => ipcRenderer.invoke('auth:hashPw', pw),
   verifyPw:     (pw, hash)  => ipcRenderer.invoke('auth:verifyPw', pw, hash),
   minimize:     ()          => ipcRenderer.invoke('win:minimize'),

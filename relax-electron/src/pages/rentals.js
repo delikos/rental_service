@@ -206,7 +206,7 @@ function updateDiscount(){
   const tot=base-disc;
   const lbl=document.getElementById('total-price-lbl');
   if(!lbl)return;
-  if(tot>0){
+  if(base>0){
     lbl.textContent=pct>0?`${t('totalPrice')||'Łącznie'}: ${tot} zł (-${disc} zł)`:
       `${t('totalPrice')||'Łącznie'}: ${tot} zł`;
   } else {

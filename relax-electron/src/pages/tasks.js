@@ -116,8 +116,9 @@ function addTask(){
   const title=document.getElementById('task-title')?.value.trim();
   const errEl=document.getElementById('task-err');
   if(!title){if(errEl)errEl.textContent='Tytuł jest wymagany.';return;}
-  const dateVal=document.getElementById('task-date')?.value.trim()||'';
+  let dateVal=document.getElementById('task-date')?.value.trim()||'';
   if(dateVal&&!/^\d{2}\.\d{2}\.\d{4}$/.test(dateVal)){if(errEl)errEl.textContent='Data musi być w formacie dd.mm.yyyy.';return;}
+  if(!dateVal){const n=new Date();dateVal=String(n.getDate()).padStart(2,'0')+'.'+String(n.getMonth()+1).padStart(2,'0')+'.'+n.getFullYear();}
   if(errEl)errEl.textContent='';
   tasks.push({id:uid(),title,date:dateVal,assignee:document.getElementById('task-assignee')?.value||'',desc:document.getElementById('task-desc')?.value.trim()||'',author:currentUser?.name||'',createdTs:Date.now()});
   saveTasks();renderTasks();
